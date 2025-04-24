@@ -4,6 +4,7 @@ import { useTransactions } from '@/context/TransactionContext';
 import FileUploader from './FileUploader';
 import SummaryStats from './SummaryStats';
 import TransactionList from './TransactionList';
+import SaveStatement from './SaveStatement';
 
 const Dashboard: React.FC = () => {
   const { transactions, summary } = useTransactions();
@@ -19,6 +20,10 @@ const Dashboard: React.FC = () => {
       
       {hasData && (
         <>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Statement Analysis</h2>
+            <SaveStatement />
+          </div>
           <SummaryStats />
           <TransactionList />
         </>

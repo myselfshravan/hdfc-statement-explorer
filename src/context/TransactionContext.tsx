@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 import { Transaction, StatementSummary, DateRange } from '../types/transaction';
 import { parseHdfcStatement } from '../utils/statementParser';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from './AuthContext';
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -16,6 +17,7 @@ interface TransactionContextType {
   categoryFilter: string | null;
   setCategoryFilter: (category: string | null) => void;
   resetFilters: () => void;
+  saveStatement: (name: string) => Promise<void>;
 }
 
 const defaultSummary: StatementSummary = {
@@ -41,6 +43,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [upiFilter, setUpiFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const applyFilters = useCallback(() => {
@@ -111,6 +114,51 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const saveStatement = async (name: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save statements",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!summary || transactions.length === 0) {
+      toast({
+        title: "No statement to save",
+        description: "Please upload a statement first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('statements')
+        .insert({
+          name,
+          user_id: user.id,
+          summary,
+          transactions: transactions.map(t => ({ ...t, date: t.date.toISOString() })),
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Statement saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving statement:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save statement",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <TransactionContext.Provider
       value={{
@@ -126,6 +174,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         categoryFilter,
         setCategoryFilter,
         resetFilters,
+        saveStatement,
       }}
     >
       {children}
