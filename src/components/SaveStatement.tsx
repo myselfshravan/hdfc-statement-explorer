@@ -3,6 +3,7 @@ import { useTransactions } from "@/context/TransactionContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,10 @@ export default function SaveStatement() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Save Statement</Button>
+        <Button variant="outline" className="flex items-center gap-2">
+          <Save className="h-4 w-4" />
+          Save Statement
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

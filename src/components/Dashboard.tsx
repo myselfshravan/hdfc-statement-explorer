@@ -31,27 +31,32 @@ const Dashboard: React.FC = () => {
 
       {hasData && (
         <>
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-center">
-              Statement Analysis
-            </h2>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 px-4 md:px-8 lg:max-w-6xl lg:mx-auto text-center md:text-left w-full">
+            <div className="w-full md:w-auto">
+              <h2 className="text-2xl font-bold">Statement Analysis</h2>
+            </div>
             {user ? (
-              <SaveStatement />
+              <div className="w-full md:w-auto flex justify-center md:justify-end">
+                <SaveStatement />
+              </div>
             ) : (
-              <Card className="p-4">
-                <CardDescription className="flex items-center gap-2">
-                  Sign in to save this statement
-                  <Button variant="outline" asChild size="sm">
-                    <Link to="/auth">
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In
-                    </Link>
-                  </Button>
-                </CardDescription>
-              </Card>
+              <div className="w-full md:w-auto flex justify-center md:justify-end">
+                <Card className="p-4">
+                  <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span>Sign in to save this statement</span>
+                    <Button variant="outline" asChild size="sm">
+                      <Link to="/auth" className="flex items-center gap-1">
+                        <LogIn className="h-4 w-4" />
+                        Sign In
+                      </Link>
+                    </Button>
+                  </CardDescription>
+                </Card>
+              </div>
             )}
           </div>
-          <div className="flex flex-col max-w-6xl mx-auto gap-4">
+
+          <div className="flex flex-col w-full max-w-6xl mx-auto px-2 md:px-4 lg:px-6 gap-4">
             <SummaryStats />
             <TransactionList />
           </div>

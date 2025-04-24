@@ -36,24 +36,26 @@ const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="bg-gradient-to-b from-white to-gray-50/95 border-b border-gray-200 shadow-lg backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto py-3 px-4">
+    <header className="bg-gradient-to-b from-white via-gray-50 to-gray-100/95 border-b border-gray-200 shadow-sm backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto py-4 px-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-center sm:justify-start">
-            <img
-              src="/icon.png"
-              alt="HDFC Statement Explorer"
-              className="h-8 w-8 sm:h-6 sm:w-6 drop-shadow-md rounded-lg"
-            />
+            <div className="bg-white p-1.5 rounded-xl shadow-md">
+              <img
+                src="/icon.png"
+                alt="HDFC Statement Explorer"
+                className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg"
+              />
+            </div>
             <h1
-              className="ml-3 text-lg sm:text-2xl font-bold truncate bg-clip-text"
+              className="ml-3 text-xl sm:text-2xl font-bold truncate bg-clip-text tracking-tight"
               style={shimmerStyle}
             >
               HDFC Account Explorer
             </h1>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
             {hasData && (
               <>
                 <input
@@ -64,7 +66,7 @@ const AppHeader: React.FC = () => {
                   className="hidden"
                 />
                 <Button
-                  className="bg-gradient-to-r from-hdfc-blue to-hdfc-darkBlue hover:from-hdfc-lightBlue hover:to-hdfc-blue text-white w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300 rounded-lg"
+                  className="bg-gradient-to-r from-hdfc-blue to-hdfc-darkBlue hover:from-hdfc-lightBlue hover:to-hdfc-blue text-white w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300 rounded-lg font-semibold"
                   onClick={handleUploadClick}
                 >
                   <UploadCloud className="h-4 w-4 mr-2" />
@@ -77,7 +79,7 @@ const AppHeader: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={signOut}
-                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg"
+                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -86,7 +88,7 @@ const AppHeader: React.FC = () => {
               <Button
                 variant="outline"
                 asChild
-                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg"
+                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
               >
                 <Link to="/auth" className="w-full">
                   <LogIn className="h-4 w-4 mr-2" />

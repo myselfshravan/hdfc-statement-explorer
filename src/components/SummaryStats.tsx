@@ -27,9 +27,18 @@ const SummaryStats: React.FC = () => {
   );
   const netFilteredCashflow = totalFilteredCredit - totalFilteredDebit;
 
+  function formatSimpleDate(date: Date) {
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "long" });
+    const year = date.getFullYear();
+    return { day, month, year };
+  }
+  const start = formatSimpleDate(summary.startDate);
+  const end = formatSimpleDate(summary.endDate);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-      <Card className="stat-card">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full px-2">
+      <Card className="p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-500">Total Credits</h3>
           <div className="p-1.5 rounded-md bg-green-50">
@@ -37,7 +46,7 @@ const SummaryStats: React.FC = () => {
           </div>
         </div>
         <div className="mt-2">
-          <p className="text-2xl font-bold text-gray-800">
+          <p className="text-xl md:text-2xl font-bold text-gray-800">
             {formatCurrency(totalFilteredCredit)}
           </p>
           {filteredTransactions.length !== summary.transactionCount && (
@@ -48,7 +57,7 @@ const SummaryStats: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="stat-card">
+      <Card className="p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-500">Total Debits</h3>
           <div className="p-1.5 rounded-md bg-red-50">
@@ -56,7 +65,7 @@ const SummaryStats: React.FC = () => {
           </div>
         </div>
         <div className="mt-2">
-          <p className="text-2xl font-bold text-gray-800">
+          <p className="text-xl md:text-2xl font-bold text-gray-800">
             {formatCurrency(totalFilteredDebit)}
           </p>
           {filteredTransactions.length !== summary.transactionCount && (
@@ -67,7 +76,7 @@ const SummaryStats: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="stat-card">
+      <Card className="p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-500">Net Cashflow</h3>
           <div className="p-1.5 rounded-md bg-blue-50">
@@ -76,7 +85,7 @@ const SummaryStats: React.FC = () => {
         </div>
         <div className="mt-2">
           <p
-            className={`text-2xl font-bold ${
+            className={`text-xl md:text-2xl font-bold ${
               netFilteredCashflow >= 0 ? "text-green-600" : "text-red-600"
             }`}
           >
@@ -90,7 +99,7 @@ const SummaryStats: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="stat-card">
+      <Card className="p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-500">Date Range</h3>
           <div className="p-1.5 rounded-md bg-purple-50">
@@ -99,8 +108,7 @@ const SummaryStats: React.FC = () => {
         </div>
         <div className="mt-2 text-gray-800">
           <p className="text-sm font-medium">
-            {summary.startDate.toLocaleDateString()} -{" "}
-            {summary.endDate.toLocaleDateString()}
+            {start.day} {start.month} - {end.day} {end.month} {end.year}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {filteredTransactions.length} of {summary.transactionCount}{" "}
