@@ -33,24 +33,40 @@ export function SavedStatements() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="h-[300px] pr-2">
           <div className="space-y-4">
             {savedStatements.map((statement) => (
               <Card key={statement.id} className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                  {/* Name and Date */}
                   <div>
-                    <h4 className="font-semibold">{statement.name}</h4>
+                    <h4 className="text-base font-semibold text-gray-900">
+                      {statement.name}
+                    </h4>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(statement.created_at).toLocaleDateString()}
+                      {new Date(statement.created_at).toLocaleDateString(
+                        undefined,
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
                     </p>
                   </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() => loadStatement(statement.id)}
-                    disabled={isLoading}
-                  >
-                    Load
-                  </Button>
+
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => loadStatement(statement.id)}
+                      disabled={isLoading}
+                      className="w-full sm:w-auto"
+                    >
+                      Load
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
