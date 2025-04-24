@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 import { UploadCloud, LogOut, LogIn } from "lucide-react";
 
 const AppHeader: React.FC = () => {
-  // CSS Animation for shimmer effect
   const shimmerStyle = {
     background: "linear-gradient(90deg, #004C8F 25%, #0066CC 50%, #004C8F 75%)",
     backgroundSize: "200% 100%",
@@ -36,7 +35,7 @@ const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="bg-gradient-to-b from-white via-gray-50 to-gray-100/95 border-b border-gray-200 shadow-sm backdrop-blur-sm sticky top-0 z-50">
+    <header className="bg-gradient-to-b from-white via-gray-50 to-gray-100/95 border-b border-gray-200 shadow-sm backdrop-blur-sm sticky top-0 z-50 max-w-7xl mx-auto">
       <div className="container mx-auto py-4 px-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-center sm:justify-start">
@@ -47,12 +46,14 @@ const AppHeader: React.FC = () => {
                 className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg"
               />
             </div>
-            <h1
-              className="ml-3 text-xl sm:text-2xl font-bold truncate bg-clip-text tracking-tight"
-              style={shimmerStyle}
-            >
-              HDFC Account Explorer
-            </h1>
+            <Link to="/">
+              <h1
+                className="ml-3 text-xl sm:text-2xl font-bold truncate bg-clip-text tracking-tight"
+                style={shimmerStyle}
+              >
+                HDFC Account Explorer
+              </h1>
+            </Link>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
@@ -76,14 +77,22 @@ const AppHeader: React.FC = () => {
             )}
 
             {user ? (
-              <Button
-                variant="outline"
-                onClick={signOut}
-                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={signOut}
+                  className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+                <Button
+                  asChild
+                  className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full sm:w-auto rounded-lg font-semibold"
+                >
+                  <Link to="/analysis">Go to Analysis</Link>
+                </Button>
+              </>
             ) : (
               <Button
                 variant="outline"

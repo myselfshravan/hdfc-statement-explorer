@@ -13,8 +13,8 @@ export interface Transaction {
   upiId?: string;
   merchant?: string;
   // New fields for merging
-  transactionId: string; // Hash of transaction details for deduplication
-  statementId: string;   // Reference to parent statement
+  transactionId: string;
+  statementId: string;
 }
 
 export interface StatementSummary {
@@ -32,7 +32,25 @@ export interface StatementSummary {
 
 export interface DateRange {
   from: Date;
-  to: Date;
+  to: Date | undefined;
+  selected?: {
+    from: Date;
+    to?: Date;
+  }
+}
+
+// Helper type for calendar
+export type CalendarDateRange = {
+  from: Date;
+  to?: Date;
+};
+
+export interface DateRangeNode {
+  groupId: string;
+  startDate: Date;
+  endDate: Date;
+  left?: DateRangeNode;
+  right?: DateRangeNode;
 }
 
 export interface StatementGroup {
@@ -51,13 +69,4 @@ export interface Statement {
   summary: StatementSummary;
   transactions: Transaction[];
   created_at: string;
-}
-
-// Utility type for B-tree node
-export interface DateRangeNode {
-  groupId: string;
-  startDate: Date;
-  endDate: Date;
-  left?: DateRangeNode;
-  right?: DateRangeNode;
 }

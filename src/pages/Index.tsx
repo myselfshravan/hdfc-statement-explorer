@@ -1,6 +1,5 @@
 import React from "react";
 import { TransactionProvider } from "@/context/TransactionContext";
-import AppHeader from "@/components/AppHeader";
 import Dashboard from "@/components/Dashboard";
 import FileUploader from "@/components/FileUploader";
 
@@ -8,7 +7,6 @@ const Index = () => {
   return (
     <TransactionProvider>
       <div className="flex flex-col min-h-screen bg-gray-50">
-        <AppHeader />
         <main className="flex-1 md:p-6">
           <div className="mx-auto">
             <Dashboard />
