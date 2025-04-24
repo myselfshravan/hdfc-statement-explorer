@@ -2,55 +2,40 @@
 import * as XLSX from 'xlsx';
 import { Transaction, StatementSummary } from '../types/transaction';
 
-// Pattern to extract UPI IDs from transaction narrations
-const UPI_PATTERN = /UPI-([A-Za-z0-9.]+@[A-Za-z0-9]+|[A-Za-z0-9]+@[A-Za-z0-9.]+)/;
+// Helper to parse date values
+const parseDate = (value: string | number): Date => {
+  if (typeof value === 'string' && value.match(/^\d{2}\/\d{2}\/\d{2}$/)) {
+    // Example: 23/04/25 -> 2025-04-23
+    const [day, month, year] = value.split('/');
+    const fullYear = '20' + year; // Assuming all years are from 2000 onwards
+    return new Date(`${fullYear}-${month}-${day}`);
+  }
 
-// Function to parse date from Excel serial number
-const parseExcelDate = (serial: number): Date => {
-  const utcDays = Math.floor(serial - 25569);
-  const utcValue = utcDays * 86400;
-  const date = new Date(utcValue * 1000);
-  return date;
+  if (typeof value === 'number') {
+    return XLSX.SSF.parse_date_code(value);
+  }
+
+  return new Date(); // Fallback to current date
 };
 
-// Function to parse transaction narration and extract additional info
-const parseNarration = (narration: string): { upiId?: string, merchant?: string, category?: string } => {
-  const result: { upiId?: string, merchant?: string, category?: string } = {};
+// Convert to number or 0
+const toFloat = (val: any): number => {
+  const num = parseFloat(val);
+  return isNaN(num) ? 0 : num;
+};
+
+// Extract UPI info from Narration
+const extractUPIDetails = (narration: string) => {
+  const match = narration.match(/UPI-([A-Za-z\s]+)-(.+)/);
   
-  // Extract UPI ID if present
-  const upiMatch = narration.match(UPI_PATTERN);
-  if (upiMatch && upiMatch[1]) {
-    result.upiId = upiMatch[1];
-    
-    // Try to extract merchant name from UPI ID
-    const merchantMatch = upiMatch[1].split('@');
-    if (merchantMatch.length > 0) {
-      let possibleMerchant = merchantMatch[0].toLowerCase();
-      // Clean up common prefixes in merchant names
-      if (possibleMerchant.startsWith('pay') || possibleMerchant.startsWith('paytm')) {
-        result.merchant = possibleMerchant;
-      }
-    }
+  if (match) {
+    return {
+      upiId: match[2].trim(),    // UPI ID (e.g., "ANKOLEABHINAV@OKAXIS")
+      merchant: match[1].trim(),  // Merchant name (e.g., "ABHINAV B M")
+    };
   }
-  
-  // Basic categorization based on keywords
-  if (narration.includes('UPI')) {
-    result.category = 'UPI Payment';
-  } else if (narration.includes('ATM') || narration.includes('CASH')) {
-    result.category = 'Cash Withdrawal';
-  } else if (narration.includes('SALARY') || narration.includes('INCOME')) {
-    result.category = 'Income';
-  } else if (narration.includes('TRANSFER') || narration.includes('IMPS') || narration.includes('NEFT')) {
-    result.category = 'Transfer';
-  } else if (narration.includes('BILL') || narration.includes('PAYMENT')) {
-    result.category = 'Bill Payment';
-  } else if (narration.includes('INT') && narration.includes('CR')) {
-    result.category = 'Interest Credit';
-  } else {
-    result.category = 'Others';
-  }
-  
-  return result;
+
+  return { upiId: undefined, merchant: undefined };
 };
 
 // Main function to parse HDFC statement
@@ -64,132 +49,94 @@ export const parseHdfcStatement = async (file: File): Promise<{
     const workbook = XLSX.read(data);
     
     // Get first sheet
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
     
-    // Convert to JSON
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    // Get raw rows (no headers)
+    const rawRows = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      defval: null,
+    }) as any[][];
     
-    // Check if this is a valid HDFC statement format
-    if (jsonData.length === 0) {
-      throw new Error("No data found in the Excel file");
+    // Remove header and footer rows
+    const dataRows = rawRows.slice(21, -18);
+    
+    if (dataRows.length === 0) {
+      throw new Error("No transactions found in the statement");
     }
-    
-    // Define column mappings for HDFC statement
-    const columnMappings = {
-      date: "Date",
-      narration: "Narration", 
-      valueDate: "Value Dt",
-      debitAmount: "Debit Amt",
-      creditAmount: "Credit Amt",
-      chqRefNumber: "Chq/Ref Number",
-      closingBalance: "Closing Balance"
-    };
     
     // Process transactions
     const transactions: Transaction[] = [];
     let startingBalance = 0;
     let endingBalance = 0;
     
-    jsonData.forEach((row: any, index: number) => {
-      // Skip header rows or invalid entries
-      if (!row[columnMappings.date] || !row[columnMappings.narration]) {
-        return;
-      }
+    dataRows.forEach((row: any[], index: number) => {
+      const narration = row[1]; // Narration
+      const date = parseDate(row[3]); // Date
+      const withdrawal = toFloat(row[4]); // Withdrawal
+      const deposit = toFloat(row[5]); // Deposit
+      const balance = toFloat(row[6]); // Balance
       
-      // Parse date values
-      let transactionDate: Date;
-      let valueDate: Date;
+      // Skip invalid entries
+      if (!narration || !date) return;
       
-      if (typeof row[columnMappings.date] === 'number') {
-        transactionDate = parseExcelDate(row[columnMappings.date]);
-      } else if (typeof row[columnMappings.date] === 'string') {
-        transactionDate = new Date(row[columnMappings.date]);
-      } else {
-        // Skip invalid dates
-        return;
-      }
+      // Extract additional info
+      const { upiId, merchant } = extractUPIDetails(narration);
       
-      if (typeof row[columnMappings.valueDate] === 'number') {
-        valueDate = parseExcelDate(row[columnMappings.valueDate]);
-      } else if (typeof row[columnMappings.valueDate] === 'string') {
-        valueDate = new Date(row[columnMappings.valueDate]);
-      } else {
-        valueDate = transactionDate; // Default to transaction date if value date is missing
-      }
-      
-      // Parse amounts
-      const debitAmount = typeof row[columnMappings.debitAmount] === 'number' ? 
-        row[columnMappings.debitAmount] : 0;
-      
-      const creditAmount = typeof row[columnMappings.creditAmount] === 'number' ? 
-        row[columnMappings.creditAmount] : 0;
-      
-      const closingBalance = typeof row[columnMappings.closingBalance] === 'number' ? 
-        row[columnMappings.closingBalance] : 0;
-      
-      // Calculate derived fields
-      const amount = debitAmount > 0 ? debitAmount : creditAmount;
-      const type = debitAmount > 0 ? "debit" : "credit";
-      
-      // Extract additional info from narration
-      const additionalInfo = parseNarration(row[columnMappings.narration]);
+      // Determine transaction type
+      const type = withdrawal > 0 ? "debit" : "credit";
+      const amount = withdrawal > 0 ? withdrawal : deposit;
       
       // Create transaction object
       const transaction: Transaction = {
-        date: transactionDate,
-        narration: row[columnMappings.narration],
-        valueDate: valueDate,
-        debitAmount,
-        creditAmount,
-        chqRefNumber: row[columnMappings.chqRefNumber] || "",
-        closingBalance,
+        date,
+        narration,
+        valueDate: date, // Using same date as value date
+        debitAmount: withdrawal,
+        creditAmount: deposit,
+        chqRefNumber: "",
+        closingBalance: balance,
         amount,
         type,
-        ...additionalInfo
+        category: type === "credit" ? "Deposit" : "Withdrawal",
+        upiId,
+        merchant
       };
       
       transactions.push(transaction);
       
       // Track starting and ending balance
       if (index === 0) {
-        startingBalance = closingBalance - creditAmount + debitAmount;
+        startingBalance = balance + withdrawal - deposit;
       }
-      
-      if (index === jsonData.length - 1) {
-        endingBalance = closingBalance;
+      if (index === dataRows.length - 1) {
+        endingBalance = balance;
       }
     });
     
     // Sort transactions by date
     transactions.sort((a, b) => a.date.getTime() - b.date.getTime());
     
-    // Calculate summary statistics
+    // Calculate summary
     const totalDebit = transactions.reduce((sum, t) => sum + t.debitAmount, 0);
     const totalCredit = transactions.reduce((sum, t) => sum + t.creditAmount, 0);
-    const netCashflow = totalCredit - totalDebit;
-    
-    const startDate = transactions.length > 0 ? transactions[0].date : new Date();
-    const endDate = transactions.length > 0 ? transactions[transactions.length - 1].date : new Date();
-    
-    const creditCount = transactions.filter(t => t.type === "credit").length;
-    const debitCount = transactions.filter(t => t.type === "debit").length;
     
     const summary: StatementSummary = {
       totalDebit,
       totalCredit,
-      netCashflow,
-      startDate,
-      endDate,
+      netCashflow: totalCredit - totalDebit,
+      startDate: transactions[0]?.date || new Date(),
+      endDate: transactions[transactions.length - 1]?.date || new Date(),
       startingBalance,
       endingBalance,
       transactionCount: transactions.length,
-      creditCount,
-      debitCount
+      creditCount: transactions.filter(t => t.type === "credit").length,
+      debitCount: transactions.filter(t => t.type === "debit").length
     };
     
     return { transactions, summary };
+    
   } catch (error) {
-    console.error("Error parsing HDFC statement:", error);
-    throw new Error("Failed to parse the bank statement. Please make sure it's a valid HDFC Bank statement.");
+    console.error("Error parsing statement:", error);
+    throw error;
   }
 };
