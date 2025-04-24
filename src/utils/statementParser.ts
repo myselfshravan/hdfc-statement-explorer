@@ -1,6 +1,6 @@
 
 import * as XLSX from 'xlsx';
-import { Transaction } from '../types/transaction';
+import { Transaction, StatementSummary } from '../types/transaction';
 
 const parseDate = (value: string | number): Date => {
   if (typeof value === 'string' && value.match(/^\d{2}\/\d{2}\/\d{2}$/)) {
@@ -36,12 +36,7 @@ const extractUPIDetails = (narration: string) => {
 
 export const parseHdfcStatement = async (file: File): Promise<{
   transactions: Transaction[],
-  summary: {
-    totalDebit: number,
-    totalCredit: number,
-    startDate: Date,
-    endDate: Date
-  }
+  summary: StatementSummary
 }> => {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data);
@@ -82,13 +77,31 @@ export const parseHdfcStatement = async (file: File): Promise<{
     };
   });
   
-  const summary = {
-    totalDebit: transactions.reduce((sum, t) => sum + t.debitAmount, 0),
-    totalCredit: transactions.reduce((sum, t) => sum + t.creditAmount, 0),
+  // Calculate starting balance using the first transaction's closing balance minus its impact
+  const firstTransaction = transactions[0];
+  const lastTransaction = transactions[transactions.length - 1];
+  let startingBalance = 0;
+  
+  if (firstTransaction) {
+    startingBalance = firstTransaction.closingBalance - 
+      (firstTransaction.creditAmount - firstTransaction.debitAmount);
+  }
+  
+  const totalDebit = transactions.reduce((sum, t) => sum + t.debitAmount, 0);
+  const totalCredit = transactions.reduce((sum, t) => sum + t.creditAmount, 0);
+  
+  const summary: StatementSummary = {
+    totalDebit,
+    totalCredit,
+    netCashflow: totalCredit - totalDebit,
     startDate: transactions[0]?.date || new Date(),
-    endDate: transactions[transactions.length - 1]?.date || new Date()
+    endDate: transactions[transactions.length - 1]?.date || new Date(),
+    startingBalance,
+    endingBalance: lastTransaction?.closingBalance || 0,
+    transactionCount: transactions.length,
+    creditCount: transactions.filter(t => t.type === "credit").length,
+    debitCount: transactions.filter(t => t.type === "debit").length
   };
   
   return { transactions, summary };
 };
-
