@@ -5,11 +5,22 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import { Transaction, StatementSummary, DateRange } from "../types/transaction";
+import {
+  Transaction,
+  StatementSummary,
+  DateRange,
+  StatementGroup,
+  Statement,
+} from "../types/transaction";
 import { parseHdfcStatement } from "../utils/statementParser";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabaseClient";
+import { SuperStatementManager } from "../utils/superStatementManager";
+import { v4 as uuidv4 } from "uuid";
+
+// Create singleton instance
+const superStatementManager = new SuperStatementManager();
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -29,9 +40,11 @@ interface TransactionContextType {
     id: string;
     name: string;
     created_at: string;
+    groupId: string;
   }>;
   loadSavedStatements: () => Promise<void>;
   loadStatement: (id: string) => Promise<void>;
+  currentGroup: StatementGroup | null;
 }
 
 const defaultSummary: StatementSummary = {
@@ -52,6 +65,7 @@ const TransactionContext = createContext<TransactionContextType | undefined>(
 );
 
 export const TransactionProvider = ({ children }: { children: ReactNode }) => {
+  const [currentGroup, setCurrentGroup] = useState<StatementGroup | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<
     Transaction[]
@@ -66,6 +80,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       id: string;
       name: string;
       created_at: string;
+      groupId: string;
     }>
   >([]);
   const { user } = useAuth();
@@ -162,22 +177,43 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const { error } = await supabase.from("statements").insert({
+      const statementId = uuidv4();
+
+      // First save individual statement for reference
+      const { error: statementError } = await supabase.from("statements").insert({
+        id: statementId,
         name,
         user_id: user.id,
         summary,
-        transactions: transactions.map((t) => ({
+        transactions: transactions.map(t => ({
           ...t,
           date: t.date.toISOString(),
         })),
       });
 
-      if (error) throw error;
+      if (statementError) {
+        console.error('Error saving individual statement:', statementError);
+        throw new Error('Failed to save statement. Please try again.');
+      }
+
+      // Then merge into the super statement
+      const superStatement = await superStatementManager.mergeStatement(
+        user.id,
+        transactions,
+        summary
+      );
+
+      // Update the UI with the merged data
+      setTransactions(superStatement.transactions);
+      setFilteredTransactions(superStatement.transactions);
+      setSummary(superStatement.summary);
 
       toast({
         title: "Success",
-        description: "Statement saved successfully",
+        description: "Statement saved and merged successfully",
       });
+
+      await loadSavedStatements();
     } catch (error) {
       console.error("Error saving statement:", error);
       toast({
@@ -200,6 +236,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // Load all statements for the list
       const { data, error } = await supabase
         .from("statements")
         .select("id, name, created_at")
@@ -207,7 +244,14 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setSavedStatements(data || []);
+      setSavedStatements(
+        (data || []).map((item) => ({
+          id: item.id,
+          name: item.name,
+          created_at: item.created_at,
+          groupId: item.id // Use statement id as groupId since we're not using groups anymore
+        }))
+      );
     } catch (error) {
       console.error("Error loading statements:", error);
       toast({
@@ -223,17 +267,25 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("statements")
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .single();
+      // Load the individual statement and super statement
+      const [statement, superTransactions, superSummary] = await Promise.all([
+        supabase
+          .from("statements")
+          .select("*")
+          .eq("id", id)
+          .eq("user_id", user.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error) throw error;
+            if (!data) throw new Error("Statement not found");
+            return data;
+          }),
+        superStatementManager.getSuperStatementTransactions(user.id),
+        superStatementManager.getSuperStatementSummary(user.id)
+      ]);
 
-      if (error) throw error;
-      if (!data) throw new Error("Statement not found");
-
-      const parsedTransactions = data.transactions.map(
+      // Set the loaded statement's transactions in UI
+      const parsedTransactions = statement.transactions.map(
         (t: Omit<Transaction, "date"> & { date: string }) => ({
           ...t,
           date: new Date(t.date),
@@ -243,14 +295,26 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       setTransactions(parsedTransactions);
       setFilteredTransactions(parsedTransactions);
       setSummary({
-        ...data.summary,
-        startDate: new Date(data.summary.startDate),
-        endDate: new Date(data.summary.endDate),
+        ...statement.summary,
+        startDate: new Date(statement.summary.startDate),
+        endDate: new Date(statement.summary.endDate),
       });
+
+      // Set current group using super statement data
+      if (superSummary) {
+        setCurrentGroup({
+          id: 'super',
+          userId: user.id,
+          firstDate: superSummary.startDate,
+          lastDate: superSummary.endDate,
+          mergedSummary: superSummary,
+          statements: [statement]
+        });
+      }
 
       toast({
         title: "Statement loaded",
-        description: `Loaded statement: ${data.name}`,
+        description: `Loaded statement: ${statement.name}`,
       });
     } catch (error) {
       console.error("Error loading statement:", error);
@@ -292,6 +356,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         savedStatements,
         loadSavedStatements,
         loadStatement,
+        currentGroup,
       }}
     >
       {children}
