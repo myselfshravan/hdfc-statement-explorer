@@ -19,8 +19,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col gap-6 w-full">
       {!hasData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10">
-          <div className="flex items-center justify-center">
+        <div className="grid grid-cols-1 gap-6 pt-10 px-4 md:px-0">
+          <div className="flex items-center justify-center w-full">
             <FileUploader />
           </div>
           <div className="flex items-center justify-center">
@@ -32,7 +32,9 @@ const Dashboard: React.FC = () => {
       {hasData && (
         <>
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Statement Analysis</h2>
+            <h2 className="text-2xl font-bold text-center">
+              Statement Analysis
+            </h2>
             {user ? (
               <SaveStatement />
             ) : (
@@ -49,8 +51,10 @@ const Dashboard: React.FC = () => {
               </Card>
             )}
           </div>
-          <SummaryStats />
-          <TransactionList />
+          <div className="flex flex-col max-w-6xl mx-auto gap-4">
+            <SummaryStats />
+            <TransactionList />
+          </div>
         </>
       )}
     </div>

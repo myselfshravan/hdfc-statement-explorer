@@ -1,13 +1,18 @@
-
-import { useState } from 'react';
-import { useTransactions } from '@/context/TransactionContext';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState } from "react";
+import { useTransactions } from "@/context/TransactionContext";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function SaveStatement() {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const { saveStatement, loadSavedStatements } = useTransactions();
   const { user } = useAuth();
@@ -16,7 +21,7 @@ export default function SaveStatement() {
     e.preventDefault();
     await saveStatement(name);
     await loadSavedStatements();
-    setName('');
+    setName("");
     setIsOpen(false);
   };
 

@@ -6,6 +6,16 @@ import { Link } from "react-router-dom";
 import { UploadCloud, LogOut, LogIn } from "lucide-react";
 
 const AppHeader: React.FC = () => {
+  // CSS Animation for shimmer effect
+  const shimmerStyle = {
+    background: "linear-gradient(90deg, #004C8F 25%, #0066CC 50%, #004C8F 75%)",
+    backgroundSize: "200% 100%",
+    animation: "shimmer 2s infinite linear",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+  };
+
   const { transactions, uploadAndParseStatement } = useTransactions();
   const { user, signOut } = useAuth();
   const hasData = transactions.length > 0;
@@ -20,22 +30,25 @@ const AppHeader: React.FC = () => {
     if (file) {
       await uploadAndParseStatement(file);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="container mx-auto p-4">
+    <header className="bg-gradient-to-b from-white to-gray-50/95 border-b border-gray-200 shadow-lg backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto py-3 px-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-center sm:justify-start">
             <img
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48' fill='none'%3E%3Crect width='48' height='48' rx='8' fill='%23004C8F'/%3E%3Cpath d='M12 18H36V28C36 29.1046 35.1046 30 34 30H14C12.8954 30 12 29.1046 12 28V18Z' fill='white'/%3E%3Cpath d='M17 15H31V22H17V15Z' fill='%23ED232A'/%3E%3C/svg%3E"
-              alt="HDFC Logo"
-              className="h-8 w-8 sm:h-10 sm:w-10"
+              src="/icon.png"
+              alt="HDFC Statement Explorer"
+              className="h-8 w-8 sm:h-6 sm:w-6 drop-shadow-md rounded-lg"
             />
-            <h1 className="ml-3 text-lg sm:text-xl font-bold text-hdfc-blue truncate">
+            <h1
+              className="ml-3 text-lg sm:text-2xl font-bold truncate bg-clip-text"
+              style={shimmerStyle}
+            >
               HDFC Account Explorer
             </h1>
           </div>
@@ -50,8 +63,8 @@ const AppHeader: React.FC = () => {
                   accept=".xls,.xlsx"
                   className="hidden"
                 />
-                <Button 
-                  className="bg-hdfc-blue hover:bg-hdfc-lightBlue w-full sm:w-auto"
+                <Button
+                  className="bg-gradient-to-r from-hdfc-blue to-hdfc-darkBlue hover:from-hdfc-lightBlue hover:to-hdfc-blue text-white w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300 rounded-lg"
                   onClick={handleUploadClick}
                 >
                   <UploadCloud className="h-4 w-4 mr-2" />
@@ -62,15 +75,19 @@ const AppHeader: React.FC = () => {
 
             {user ? (
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={signOut}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
             ) : (
-              <Button variant="outline" asChild className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                asChild
+                className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg"
+              >
                 <Link to="/auth" className="w-full">
                   <LogIn className="h-4 w-4 mr-2" />
                   Sign In

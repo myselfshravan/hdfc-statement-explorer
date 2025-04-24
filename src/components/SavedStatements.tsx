@@ -25,7 +25,7 @@ export function SavedStatements() {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Saved Statements</CardTitle>
         <CardDescription>
@@ -33,7 +33,7 @@ export function SavedStatements() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] pr-4">
+        <ScrollArea className="h-[300px]">
           <div className="space-y-4">
             {savedStatements.map((statement) => (
               <Card key={statement.id} className="p-4">

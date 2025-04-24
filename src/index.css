@@ -46,6 +46,16 @@
   }
 }
 
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /* Custom classes */
 .upload-area {
   @apply border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all hover:border-hdfc-blue hover:bg-blue-50/30;
