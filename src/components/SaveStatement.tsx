@@ -9,12 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 export default function SaveStatement() {
   const [name, setName] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const { saveStatement } = useTransactions();
+  const { saveStatement, loadSavedStatements } = useTransactions();
   const { user } = useAuth();
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     await saveStatement(name);
+    await loadSavedStatements();
     setName('');
     setIsOpen(false);
   };
