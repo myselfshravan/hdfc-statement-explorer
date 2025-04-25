@@ -6,14 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface TagFilterProps {
-  onTagSelect: (tagIds: string[]) => void;
-}
+import { TagFilterProps } from "@/types/filter";
 
-export function TagFilter({ onTagSelect }: TagFilterProps) {
+export function TagFilter({ onTagSelect, selectedTagIds }: TagFilterProps) {
   const { user } = useAuth();
   const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -24,14 +21,10 @@ export function TagFilter({ onTagSelect }: TagFilterProps) {
   }, [user]);
 
   const toggleTag = (tagId: string) => {
-    setSelectedTags(prev => {
-      const newSelection = prev.includes(tagId)
-        ? prev.filter(id => id !== tagId)
-        : [...prev, tagId];
-      
-      onTagSelect(newSelection);
-      return newSelection;
-    });
+    const newSelection = selectedTagIds.includes(tagId)
+      ? selectedTagIds.filter(id => id !== tagId)
+      : [...selectedTagIds, tagId];
+    onTagSelect(newSelection);
   };
 
   if (tags.length === 0) return null;
@@ -44,17 +37,17 @@ export function TagFilter({ onTagSelect }: TagFilterProps) {
           {tags.map(tag => (
             <Badge
               key={tag.id}
-              variant={selectedTags.includes(tag.id) ? 'default' : 'outline'}
+              variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
               style={{
-                backgroundColor: selectedTags.includes(tag.id) ? tag.color : 'transparent',
+                backgroundColor: selectedTagIds.includes(tag.id) ? tag.color : 'transparent',
                 borderColor: tag.color,
-                color: selectedTags.includes(tag.id) ? 'white' : tag.color
+                color: selectedTagIds.includes(tag.id) ? 'white' : tag.color
               }}
               className="cursor-pointer"
               onClick={() => toggleTag(tag.id)}
             >
               {tag.name}
-              {selectedTags.includes(tag.id) && (
+              {selectedTagIds.includes(tag.id) && (
                 <span className="ml-1 text-xs">×</span>
               )}
             </Badge>

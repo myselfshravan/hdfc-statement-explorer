@@ -15,6 +15,7 @@ export function TransactionTags({ transactionId, tags, onTagsChange }: Transacti
 
   return (
     <div className="flex items-center gap-2">
+      {/* Tags display */}
       <div className="flex flex-wrap gap-1">
         {tags.map(tag => (
           <Badge
@@ -27,10 +28,13 @@ export function TransactionTags({ transactionId, tags, onTagsChange }: Transacti
           </Badge>
         ))}
       </div>
+      
+      {/* Show edit icon if tags exist, else show "Add Tags" */}
       <TagManager
         transactionId={transactionId}
-        transactionTags={tags} // Pass current tags down
-        onTagsChange={onTagsChange} // Use the passed-in handler
+        transactionTags={tags}
+        onTagsChange={onTagsChange}
+        showEditMode={tags.length > 0}
       />
     </div>
   );

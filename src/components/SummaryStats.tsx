@@ -40,6 +40,23 @@ const SummaryStats: React.FC = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full px-2">
       <Card className="p-4">
         <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-500">Date Range</h3>
+          <div className="p-1.5 rounded-md bg-purple-50">
+            <Calendar className="h-4 w-4 text-purple-600" />
+          </div>
+        </div>
+        <div className="mt-2 text-gray-800">
+          <p className="text-sm font-medium">
+            {start.day} {start.month} - {end.day} {end.month} {end.year}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {filteredTransactions.length} of {summary.transactionCount}{" "}
+            transactions
+          </p>
+        </div>
+      </Card>
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-500">Total Credits</h3>
           <div className="p-1.5 rounded-md bg-green-50">
             <ArrowDown className="h-4 w-4 text-green-600" />
@@ -96,24 +113,6 @@ const SummaryStats: React.FC = () => {
               Total: {formatCurrency(summary.netCashflow)}
             </p>
           )}
-        </div>
-      </Card>
-
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-500">Date Range</h3>
-          <div className="p-1.5 rounded-md bg-purple-50">
-            <Calendar className="h-4 w-4 text-purple-600" />
-          </div>
-        </div>
-        <div className="mt-2 text-gray-800">
-          <p className="text-sm font-medium">
-            {start.day} {start.month} - {end.day} {end.month} {end.year}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {filteredTransactions.length} of {summary.transactionCount}{" "}
-            transactions
-          </p>
         </div>
       </Card>
     </div>

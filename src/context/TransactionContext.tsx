@@ -267,55 +267,49 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
     setIsLoading(true);
     try {
-      // Load the individual statement and super statement
-      const [statement, superTransactions, superSummary] = await Promise.all([
-        supabase
-          .from("statements")
-          .select("*")
-          .eq("id", id)
-          .eq("user_id", user.id)
-          .single()
-          .then(({ data, error }) => {
-            if (error) throw error;
-            if (!data) throw new Error("Statement not found");
-            return data;
-          }),
-        superStatementManager.getSuperStatementTransactions(user.id),
-        superStatementManager.getSuperStatementSummary(user.id)
-      ]);
+      const { data: statement, error } = await supabase
+        .from("statements")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .single();
 
-      // Set the loaded statement's transactions in UI
-      const parsedTransactions = statement.transactions.map(
-        (t: Omit<Transaction, "date"> & { date: string }) => ({
-          ...t,
-          date: new Date(t.date),
-        })
-      );
+      if (error) throw error;
+      if (!statement) throw new Error("Statement not found");
 
-      setTransactions(parsedTransactions);
-      setFilteredTransactions(parsedTransactions);
-      setSummary({
-        ...statement.summary,
-        startDate: new Date(statement.summary.startDate),
-        endDate: new Date(statement.summary.endDate),
-      });
+      // Only load and update state if it's a different statement
+      if (!currentGroup?.statements[0] || currentGroup.statements[0].id !== id) {
+        // Set the loaded statement's transactions in UI
+        const parsedTransactions = statement.transactions.map(
+          (t: Omit<Transaction, "date"> & { date: string }) => ({
+            ...t,
+            date: new Date(t.date),
+          })
+        );
 
-      // Set current group using super statement data
-      if (superSummary) {
+        setTransactions(parsedTransactions);
+        setFilteredTransactions(parsedTransactions);
+        setSummary({
+          ...statement.summary,
+          startDate: new Date(statement.summary.startDate),
+          endDate: new Date(statement.summary.endDate),
+        });
+
         setCurrentGroup({
-          id: 'super',
+          id: statement.id,
           userId: user.id,
-          firstDate: superSummary.startDate,
-          lastDate: superSummary.endDate,
-          mergedSummary: superSummary,
+          firstDate: new Date(statement.summary.startDate),
+          lastDate: new Date(statement.summary.endDate),
+          mergedSummary: statement.summary,
           statements: [statement]
         });
-      }
 
-      toast({
-        title: "Statement loaded",
-        description: `Loaded statement: ${statement.name}`,
-      });
+        // Show toast only when loading a different statement
+        toast({
+          title: "Statement loaded",
+          description: `Loaded statement: ${statement.name}`,
+        });
+      }
     } catch (error) {
       console.error("Error loading statement:", error);
       toast({

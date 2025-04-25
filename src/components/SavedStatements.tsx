@@ -1,5 +1,6 @@
 import React from "react";
 import { useTransactions } from "@/context/TransactionContext";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -11,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function SavedStatements() {
-  const { savedStatements, loadStatement, isLoading } = useTransactions();
+  const { savedStatements, isLoading } = useTransactions();
+  const navigate = useNavigate();
 
   if (savedStatements.length === 0) {
     return (
@@ -60,7 +62,7 @@ export function SavedStatements() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => loadStatement(statement.id)}
+                      onClick={() => navigate(`/statement/${statement.id}`)}
                       disabled={isLoading}
                       className="w-full sm:w-auto"
                     >

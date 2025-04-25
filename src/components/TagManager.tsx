@@ -21,11 +21,12 @@ import {
 
 interface TagManagerProps {
   transactionId: string;
-  transactionTags: Tag[]; // Accept current tags as prop
+  transactionTags: Tag[];
   onTagsChange?: () => void;
+  showEditMode?: boolean;
 }
 
-export function TagManager({ transactionId, transactionTags: initialTransactionTags, onTagsChange }: TagManagerProps) {
+export function TagManager({ transactionId, transactionTags: initialTransactionTags, onTagsChange, showEditMode = false }: TagManagerProps) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [allUserTags, setAllUserTags] = useState<Tag[]>([]); // Renamed state for clarity
@@ -97,11 +98,29 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="h-8 border-dashed"
+          className="h-8 px-2"
         >
-          Manage Tags
+          {showEditMode ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-500"
+            >
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          ) : (
+            <span className="text-sm">Add Tags</span>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent>
