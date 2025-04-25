@@ -100,26 +100,18 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 px-2"
+          className="h-6 px-1 hover:bg-accent hover:text-accent-foreground flex items-center gap-1"
         >
+          {!showEditMode && <span className="text-[11px] text-muted-foreground">Add tags</span>}
           {showEditMode ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-gray-500"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 text-muted-foreground">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
           ) : (
-            <span className="text-sm">Add Tags</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 text-muted-foreground">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
           )}
         </Button>
       </DialogTrigger>
@@ -135,7 +127,7 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
               <Badge
                 key={tag.id}
                 style={{ backgroundColor: tag.color }}
-                className="cursor-pointer"
+                className="cursor-pointer text-[11px] leading-none whitespace-nowrap px-2 py-[3px]"
                 onClick={() => toggleTag(tag)}
               >
                 {tag.name}
@@ -169,7 +161,7 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
                             opacity: tagToggleState.isLoading ? 0.5 : 1, // Dim if loading
                             cursor: tagToggleState.isLoading ? 'wait' : 'pointer',
                           }}
-                          className={`transition-opacity ${tagToggleState.isLoading ? '' : 'cursor-pointer'}`}
+                          className={`transition-opacity text-[11px] leading-none whitespace-nowrap px-2 py-[3px] ${tagToggleState.isLoading ? '' : 'cursor-pointer'}`}
                           onClick={() => !tagToggleState.isLoading && toggleTag(tag)} // Prevent click while loading
                         >
                           {tagToggleState.isLoading ? '...' : tag.name} {/* Show loading indicator */}

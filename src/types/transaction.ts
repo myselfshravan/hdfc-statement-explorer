@@ -1,3 +1,5 @@
+import { Tag } from "./tags";
+
 export interface Transaction {
   date: Date;
   narration: string;
@@ -15,6 +17,8 @@ export interface Transaction {
   // New fields for merging
   transactionId: string;
   statementId: string;
+  // Tags support
+  tags?: Array<Tag>;
 }
 
 export interface StatementSummary {

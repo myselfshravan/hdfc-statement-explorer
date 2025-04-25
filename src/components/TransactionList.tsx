@@ -2,6 +2,8 @@ import React from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TransactionTags } from "./TransactionTags";
+import { Tag } from "@/types/tags";
 import {
   Table,
   TableBody,
@@ -28,6 +30,11 @@ const formatDate = (date: Date): string => {
 
 const TransactionList: React.FC = () => {
   const { filteredTransactions } = useTransactions();
+  
+  // Temporary function to handle tag updates - will be implemented properly later
+  const handleTagsChange = () => {
+    // Will be implemented when tag refresh is needed
+  };
 
   return (
     <Card>
@@ -44,6 +51,7 @@ const TransactionList: React.FC = () => {
                 <TableHead className="hidden md:table-cell w-[120px]">Category</TableHead>
                 <TableHead className="text-right w-[100px] md:w-[150px]">Amount</TableHead>
                 <TableHead className="text-right hidden md:table-cell w-[150px]">Balance</TableHead>
+                <TableHead className="hidden md:table-cell w-[130px] text-center">Tags</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,6 +88,13 @@ const TransactionList: React.FC = () => {
                   </TableCell>
                   <TableCell className="text-right hidden md:table-cell">
                     {formatCurrency(transaction.closingBalance)}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell px-4 py-2 text-center">
+                    <TransactionTags 
+                      transactionId={transaction.transactionId} 
+                      tags={transaction.tags || []}
+                      onTagsChange={handleTagsChange}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

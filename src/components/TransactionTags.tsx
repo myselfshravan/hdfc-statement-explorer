@@ -14,22 +14,24 @@ export function TransactionTags({ transactionId, tags, onTagsChange }: Transacti
   // Removed internal state and useEffect
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Tags display */}
-      <div className="flex flex-wrap gap-1">
-        {tags.map(tag => (
+    <div className="inline-flex items-center space-x-1.5 justify-center">
+      <div className="flex items-center min-w-0 space-x-1 justify-center">
+        {tags.slice(0, 2).map(tag => (
           <Badge
             key={tag.id}
             style={{ backgroundColor: tag.color }}
             variant="secondary"
-            className="text-white text-xs"
+            className="text-white text-[11px] leading-tight whitespace-nowrap max-w-[100px] font-normal"
           >
             {tag.name}
           </Badge>
         ))}
+        {tags.length > 2 && (
+          <span className="text-[11px] text-muted-foreground">
+            +{tags.length - 2}
+          </span>
+        )}
       </div>
-      
-      {/* Show edit icon if tags exist, else show "Add Tags" */}
       <TagManager
         transactionId={transactionId}
         transactionTags={tags}

@@ -275,79 +275,177 @@ export default function Analysis() {
           </div>
 
           {/* Transactions Table */}
-          <Card className="p-4">
-              <div className="flex items-center justify-between mb-4">
+          <Card>
+              <div className="flex items-center justify-between p-4 border-b">
                 <h2 className="text-lg font-semibold">Transactions</h2>
                 <span className="text-sm text-muted-foreground">
                   Showing {filteredTransactions.length} of {transactions.length}{" "}
                   transactions
                 </span>
               </div>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
-                      <TableHead>Tags</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions.map((transaction) => (
-                      <TableRow key={transaction.transactionId}>
-                        <TableCell>{formatDate(transaction.date)}</TableCell>
-                        <TableCell>
-                          <div>{transaction.narration}</div>
-                          {transaction.upiId && (
-                            <div className="text-sm text-gray-500">
-                              UPI: {transaction.upiId}
+              <div>
+                {/* Desktop view */}
+                <div className="hidden md:block rounded-md border">
+                  <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10 border-b">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[100px]">Date</TableHead>
+                        <TableHead className="min-w-[300px]">Description</TableHead>
+                        <TableHead className="w-[80px]">Type</TableHead>
+                        <TableHead className="text-right w-[120px]">Amount</TableHead>
+                        <TableHead className="text-right w-[120px]">Balance</TableHead>
+                        <TableHead className="w-[250px]">Tags</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.map((transaction, index) => (
+                        <TableRow 
+                          key={transaction.transactionId}
+                          className={`${
+                            index % 2 === 0 ? 'bg-muted/50' : ''
+                          } transition-colors`}
+                        >
+                          <TableCell className="font-medium">
+                            {formatDate(transaction.date)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <div className="font-medium">
+                                {transaction.narration.split('-')[0]}
+                              </div>
+                              {transaction.narration.split('-').length > 1 && (
+                                <div className="text-sm text-muted-foreground">
+                                  {transaction.narration.split('-').slice(1).join('-')}
+                                </div>
+                              )}
+                              {transaction.upiId && (
+                                <div className="text-xs text-muted-foreground font-mono">
+                                  {transaction.upiId}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                transaction.type === "credit"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                  : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                              }`}
+                            >
+                              {transaction.type}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            <span
+                              className={`font-medium ${
+                                transaction.type === "credit"
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-red-600 dark:text-red-400"
+                              }`}
+                            >
+                              {formatAmount(transaction.amount)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-medium tabular-nums">
+                            {formatAmount(transaction.closingBalance)}
+                          </TableCell>
+                          <TableCell>
+                            <TransactionTags
+                              transactionId={transaction.transactionId}
+                              tags={
+                                transactionTags.get(transaction.transactionId) ||
+                                []
+                              }
+                              onTagsChange={() =>
+                                handleTagsChange(transaction.transactionId)
+                              }
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  </div>
+                </div>
+
+                {/* Mobile view */}
+                <div className="md:hidden rounded-md border">
+                  <div className="space-y-4 p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+                    {filteredTransactions.map((transaction, index) => (
+                      <div 
+                        key={transaction.transactionId}
+                        className={`rounded-lg border p-4 ${
+                          index % 2 === 0 ? 'bg-muted/50' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-medium">{formatDate(transaction.date)}</span>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                               transaction.type === "credit"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
                             }`}
                           >
                             {transaction.type}
                           </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="font-medium">
+                            {transaction.narration.split('-')[0]}
+                          </div>
+                          {transaction.narration.split('-').length > 1 && (
+                            <div className="text-sm text-muted-foreground">
+                              {transaction.narration.split('-').slice(1).join('-')}
+                            </div>
+                          )}
+                          {transaction.upiId && (
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {transaction.upiId}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                          <div className="space-y-1">
+                            <div className="text-sm text-muted-foreground">Amount</div>
+                            <div className={`font-medium ${
                               transaction.type === "credit"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }
-                          >
-                            {formatAmount(transaction.amount)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatAmount(transaction.closingBalance)}
-                        </TableCell>
-                        <TableCell>
-                          <TransactionTags
-                            transactionId={transaction.transactionId}
-                            tags={
-                              transactionTags.get(transaction.transactionId) ||
-                              []
-                            }
-                            onTagsChange={() =>
-                              handleTagsChange(transaction.transactionId)
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-red-600 dark:text-red-400"
+                            }`}>
+                              {formatAmount(transaction.amount)}
+                            </div>
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <div className="text-sm text-muted-foreground">Balance</div>
+                            <div className="font-medium">
+                              {formatAmount(transaction.closingBalance)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="flex justify-center">
+                            <TransactionTags
+                              transactionId={transaction.transactionId}
+                              tags={
+                                transactionTags.get(transaction.transactionId) ||
+                                []
+                              }
+                              onTagsChange={() =>
+                                handleTagsChange(transaction.transactionId)
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                </div>
               </div>
             </Card>
         </div>
