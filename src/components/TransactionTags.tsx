@@ -1,22 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react'; // Removed useEffect, useState
 import { Tag } from '@/types/tags';
 import { Badge } from "@/components/ui/badge";
 import { TagManager } from './TagManager';
-import { tagManager } from '@/utils/tagManager';
+import { tagManager } from '@/utils/tagManager'; // Keep for refresh logic
 
 interface TransactionTagsProps {
   transactionId: string;
+  tags: Tag[]; // Expect tags as a prop
+  onTagsChange: () => void; // Expect a refresh handler
 }
 
-export function TransactionTags({ transactionId }: TransactionTagsProps) {
-  const [tags, setTags] = useState<Tag[]>([]);
-
-  useEffect(() => {
-    // Load initial tags
-    tagManager.getTransactionTags(transactionId)
-      .then(setTags)
-      .catch(error => console.error('Error loading tags:', error));
-  }, [transactionId]);
+export function TransactionTags({ transactionId, tags, onTagsChange }: TransactionTagsProps) {
+  // Removed internal state and useEffect
 
   return (
     <div className="flex items-center gap-2">
@@ -34,12 +29,8 @@ export function TransactionTags({ transactionId }: TransactionTagsProps) {
       </div>
       <TagManager
         transactionId={transactionId}
-        onTagsChange={() => {
-          // Refresh tags when changes occur
-          tagManager.getTransactionTags(transactionId)
-            .then(setTags)
-            .catch(error => console.error('Error refreshing tags:', error));
-        }}
+        transactionTags={tags} // Pass current tags down
+        onTagsChange={onTagsChange} // Use the passed-in handler
       />
     </div>
   );

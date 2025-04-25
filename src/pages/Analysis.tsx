@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { SuperStatementManager } from "@/utils/superStatementManager";
 import { useAuth } from "@/context/AuthContext";
 import { Transaction, StatementSummary } from "@/types/transaction";
+import { Tag } from "@/types/tags"; // Added Tag import
 import { TransactionTags } from "@/components/TransactionTags";
 import { Card } from "@/components/ui/card";
 import { CalendarDateRange } from "@/types/transaction";
@@ -44,7 +45,7 @@ export default function Analysis() {
   const [dateRange, setDateRange] = useState<CalendarDateRange | undefined>();
   const [loading, setLoading] = useState(true);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [transactionTags, setTransactionTags] = useState<Map<string, string[]>>(
+  const [transactionTags, setTransactionTags] = useState<Map<string, Tag[]>>( // Changed to store Tag[]
     new Map()
   );
 
@@ -59,7 +60,7 @@ export default function Analysis() {
         ]);
 
         setTransactions(txns);
-        setFilteredTransactions(txns);
+        setFilteredTransactions(txns); // Initialize filtered with all transactions
         setSummary(sum);
       } catch (error) {
         console.error("Error loading super statement:", error);
@@ -71,36 +72,82 @@ export default function Analysis() {
     loadSuperStatement();
   }, [user]);
 
-  // Load transaction tags
+  // Load transaction tags in batches - RE-ENABLED
   useEffect(() => {
+    const BATCH_SIZE = 100; // Reduced batch size for testing
+
     const loadTransactionTags = async () => {
-      if (transactions.length === 0) return;
+      if (transactions.length === 0) {
+        console.log("No transactions, skipping tag fetch."); // Added logging
+        return;
+      }
 
-      const tagsMap = await tagManager.getTransactionsWithTags(
-        transactions.map((t) => t.transactionId)
-      );
+      const allTransactionIds = transactions.map((t) => t.transactionId);
+      // Create a copy to avoid modifying the state directly during iteration
+      const currentTagsMap = new Map(transactionTags);
+      const combinedTagsMap = new Map<string, Tag[]>(); // Changed to store Tag[]
 
-      // Convert Tags[] to tagIds[] for easier filtering
-      const tagIdsMap = new Map<string, string[]>();
-      tagsMap.forEach((tags, txId) => {
-        tagIdsMap.set(
-          txId,
-          tags.map((t) => t.id)
-        );
-      });
+      console.log(`Fetching tags for ${allTransactionIds.length} transactions in batches of ${BATCH_SIZE}...`); // Added logging
 
-      setTransactionTags(tagIdsMap);
+      // Helper function to introduce delay
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+      for (let i = 0; i < allTransactionIds.length; i += BATCH_SIZE) {
+        const batchIds = allTransactionIds.slice(i, i + BATCH_SIZE);
+        if (batchIds.length > 0) {
+          const batchNum = i / BATCH_SIZE + 1;
+          console.log(`Fetching batch ${batchNum} (IDs: ${batchIds.length})`); // Added logging
+          try {
+            // Check if tags for this batch are already mostly loaded (e.g., from individual updates)
+            // This is an optimization, might need refinement
+            const needsFetch = batchIds.some(id => !currentTagsMap.has(id));
+            if (!needsFetch) {
+              console.log(`Batch ${batchNum} already loaded, skipping fetch.`);
+              batchIds.forEach(id => {
+                 if (currentTagsMap.has(id)) {
+                    combinedTagsMap.set(id, currentTagsMap.get(id)!);
+                 }
+              });
+              continue; // Skip fetch if not needed
+            }
+
+            const batchTagsMap = await tagManager.getTransactionsWithTags(batchIds);
+            batchTagsMap.forEach((tags, txId) => {
+              // Store the full Tag objects
+              combinedTagsMap.set(txId, tags);
+            });
+            console.log(`Batch ${batchNum} fetched successfully.`); // Added logging
+          } catch (error) {
+             console.error(`Error fetching tags for batch ${batchNum}:`, error);
+             // Optionally, decide how to handle partial failures
+          } finally {
+             // Add a delay before the next iteration (except for the last one)
+             if (i + BATCH_SIZE < allTransactionIds.length) {
+               console.log(`Waiting 200ms before next batch...`);
+               await delay(200);
+             }
+          }
+        }
+      }
+
+      console.log('Finished fetching all tag batches.'); // Added logging
+      // Only update state if the new map is different (prevents potential loops)
+      if (JSON.stringify(Array.from(combinedTagsMap.entries())) !== JSON.stringify(Array.from(transactionTags.entries()))) {
+         setTransactionTags(combinedTagsMap);
+      }
     };
 
     loadTransactionTags();
+  // Only re-run if transactions array *reference* changes, not just content
   }, [transactions]);
 
-  // Apply filters
+
+  // Apply filters - RE-ENABLED
   useEffect(() => {
     let filtered = [...transactions];
 
     // Apply date filter
-    if (dateRange) {
+    if (dateRange?.from) { // Check if 'from' date exists
       filtered = filtered.filter(
         (tx) =>
           tx.date >= dateRange.from &&
@@ -108,16 +155,36 @@ export default function Analysis() {
       );
     }
 
-    // Apply tag filter
+    // Apply tag filter - RE-ENABLED
     if (selectedTagIds.length > 0) {
       filtered = filtered.filter((tx) => {
-        const txTags = transactionTags.get(tx.transactionId) || [];
-        return selectedTagIds.some((tagId) => txTags.includes(tagId));
+        // Now compare against tag IDs within the Tag objects
+        const txTagObjects = transactionTags?.get(tx.transactionId) || [];
+        const txTagIds = txTagObjects.map(t => t.id);
+        return selectedTagIds.some((tagId) => txTagIds.includes(tagId));
       });
     }
 
     setFilteredTransactions(filtered);
-  }, [dateRange, transactions, selectedTagIds, transactionTags]);
+  }, [dateRange, transactions, selectedTagIds, transactionTags]); // transactionTags re-added to dependencies
+
+  // Handler to reload tags for a SPECIFIC transaction
+  const handleTagsChange = async (changedTransactionId: string) => {
+    console.log(`Refreshing tags for transaction ${changedTransactionId}...`);
+    try {
+      const updatedTags = await tagManager.getTransactionTags(changedTransactionId);
+      // Update the state map immutably
+      setTransactionTags(prevMap => {
+        const newMap = new Map(prevMap);
+        newMap.set(changedTransactionId, updatedTags);
+        return newMap; // Return the new map to update state
+      });
+      console.log(`Tags refreshed for transaction ${changedTransactionId}.`);
+    } catch (error) {
+      console.error(`Error refreshing tags for transaction ${changedTransactionId}:`, error);
+    }
+  };
+
 
   if (loading) {
     return <div>Loading...</div>;
@@ -248,6 +315,9 @@ export default function Analysis() {
                   <TableCell>
                     <TransactionTags
                       transactionId={transaction.transactionId}
+                      tags={transactionTags.get(transaction.transactionId) || []} // Pass tags as prop
+                      // Pass the specific transactionId to the handler
+                      onTagsChange={() => handleTagsChange(transaction.transactionId)}
                     />
                   </TableCell>
                 </TableRow>
