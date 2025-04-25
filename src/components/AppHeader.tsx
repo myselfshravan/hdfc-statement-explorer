@@ -92,6 +92,14 @@ const AppHeader: React.FC = () => {
                 >
                   <Link to="/analysis">Go to Analysis</Link>
                 </Button>
+                {/* Add Manage Tags Link */}
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full sm:w-auto border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+                >
+                   <Link to="/tags">Manage Tags</Link>
+                </Button>
               </>
             ) : (
               <Button

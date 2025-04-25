@@ -30,9 +30,14 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
   const [isOpen, setIsOpen] = useState(false);
   const [allUserTags, setAllUserTags] = useState<Tag[]>([]); // Renamed state for clarity
   const [currentTransactionTags, setCurrentTransactionTags] = useState<Tag[]>(initialTransactionTags); // Use prop for initial state
-  const [newTagName, setNewTagName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // Removed state related to new tag creation: newTagName, selectedColor, isLoading, createError
   const [isLoadingUserTags, setIsLoadingUserTags] = useState(false); // State for loading user tags
+  const [toggleStates, setToggleStates] = useState<Record<string, { isLoading: boolean; error: string | null }>>({}); // State for toggling individual tags
+
+  // Helper to update toggle state for a specific tag
+  const setTagToggleState = (tagId: string, state: { isLoading: boolean; error: string | null }) => {
+    setToggleStates(prev => ({ ...prev, [tagId]: state }));
+  };
 
   // Update internal state if the prop changes (e.g., after parent refresh)
   useEffect(() => {
@@ -57,26 +62,15 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
     loadUserTags();
   }, [isOpen, user]); // Removed transactionId dependency
 
-  const createNewTag = async () => {
-    if (!user || !newTagName.trim()) return;
-
-    setIsLoading(true);
-    try {
-      const newTag = await tagManager.createTag(user.id, newTagName.trim());
-      setAllUserTags([...allUserTags, newTag]); // Update all user tags list
-      setNewTagName('');
-    } catch (error) {
-      console.error('Error creating tag:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Removed createNewTag function
 
   const toggleTag = async (tag: Tag) => {
     if (!user) return;
 
     // Use internal state for checking if tagged
     const isTagged = currentTransactionTags.some(t => t.id === tag.id);
+
+    setTagToggleState(tag.id, { isLoading: true, error: null }); // Set loading state
 
     try {
       if (isTagged) {
@@ -90,8 +84,12 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
       }
       // Notify parent component AFTER successful DB operation
       onTagsChange?.();
-    } catch (error) {
+      setTagToggleState(tag.id, { isLoading: false, error: null }); // Clear loading state on success
+    } catch (error: any) {
       console.error('Error toggling tag:', error);
+      setTagToggleState(tag.id, { isLoading: false, error: error.message || 'Failed to update tag' }); // Set error state
+      // Optional: Revert optimistic UI update if needed
+      // setCurrentTransactionTags(initialTransactionTags); // Or revert based on previous state
     }
   };
 
@@ -126,56 +124,53 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
             ))}
           </div>
 
-          {/* Create new tag */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="New tag name"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && createNewTag()}
-            />
-            <Button
-              onClick={createNewTag}
-              disabled={isLoading || !newTagName.trim()}
-            >
-              Add
-            </Button>
-          </div>
+          {/* Removed Create new tag section (Input, Button, Error, Color Picker) */}
 
           {/* Available tags */}
-          <div className="border rounded-md p-4">
+          <div className="border rounded-md p-4 mt-4"> {/* Added margin-top for spacing */}
             <h3 className="text-sm font-medium mb-2">Available Tags</h3>
             {isLoadingUserTags ? (
               <div>Loading available tags...</div>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {allUserTags.map(tag => ( // Use allUserTags state
+                {allUserTags.map(tag => { // Use allUserTags state
+                  const tagToggleState = toggleStates[tag.id] || { isLoading: false, error: null };
+                  const isCurrentlyTagged = currentTransactionTags.some(t => t.id === tag.id);
+                  return (
                   <TooltipProvider key={tag.id}>
                     <Tooltip>
-                      <TooltipTrigger>
+                      <TooltipTrigger disabled={tagToggleState.isLoading}>
                         <Badge
                           // Use internal state for styling
-                          variant={currentTransactionTags.some(t => t.id === tag.id) ? 'default' : 'outline'}
+                          variant={isCurrentlyTagged ? 'default' : 'outline'}
                           style={{
-                            backgroundColor: currentTransactionTags.some(t => t.id === tag.id) ? tag.color : 'transparent',
+                            backgroundColor: isCurrentlyTagged ? tag.color : 'transparent',
                             borderColor: tag.color,
-                            color: currentTransactionTags.some(t => t.id === tag.id) ? 'white' : tag.color
+                            color: isCurrentlyTagged ? 'white' : tag.color,
+                            opacity: tagToggleState.isLoading ? 0.5 : 1, // Dim if loading
+                            cursor: tagToggleState.isLoading ? 'wait' : 'pointer',
                           }}
-                          className="cursor-pointer"
-                          onClick={() => toggleTag(tag)}
+                          className={`transition-opacity ${tagToggleState.isLoading ? '' : 'cursor-pointer'}`}
+                          onClick={() => !tagToggleState.isLoading && toggleTag(tag)} // Prevent click while loading
                         >
-                          {tag.name}
+                          {tagToggleState.isLoading ? '...' : tag.name} {/* Show loading indicator */}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {/* Use internal state for tooltip text */}
-                        Click to {currentTransactionTags.some(t => t.id === tag.id) ? 'remove' : 'add'} tag
+                        {tagToggleState.error ? (
+                           <span className="text-red-600">{tagToggleState.error}</span>
+                        ) : tagToggleState.isLoading ? (
+                           'Updating...'
+                        ) : (
+                           `Click to ${isCurrentlyTagged ? 'remove' : 'add'} tag`
+                        )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              ))}
+                );
+              })}
             </div>
-          )} {/* <-- Added missing closing parenthesis */}
+          )} {/* <-- Corrected closing structure */}
           </div>
         </div>
       </DialogContent>

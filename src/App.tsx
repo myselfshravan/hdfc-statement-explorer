@@ -6,6 +6,7 @@ import AppHeader from "./components/AppHeader";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Analysis from "./pages/Analysis";
+import { TagsPage } from "./pages/TagsPage"; // Import the new page
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -20,6 +21,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/analysis" element={<Analysis />} />
+              <Route path="/tags" element={<TagsPage />} /> {/* Add the new route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
