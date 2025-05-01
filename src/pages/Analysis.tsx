@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDateRange } from "@/types/transaction";
 import { Calendar } from "@/components/ui/calendar";
 import { TagFilter } from "@/components/TagFilter";
+import { useSearchParams } from "react-router-dom";
 import { tagManager } from "@/utils/tagManager";
 import {
   Table,
@@ -37,6 +38,7 @@ function formatAmount(amount: number): string {
 }
 
 export default function Analysis() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<StatementSummary | null>(null);
