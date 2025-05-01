@@ -45,7 +45,22 @@ export default function Analysis() {
   const [filteredTransactions, setFilteredTransactions] = useState<
     Transaction[]
   >([]);
-  const [dateRange, setDateRange] = useState<CalendarDateRange | undefined>();
+  // Initialize date range from URL params
+  const initDateRange = (): CalendarDateRange | undefined => {
+    const fromStr = searchParams.get('from');
+    const toStr = searchParams.get('to');
+    if (!fromStr) return undefined;
+    
+    const range: CalendarDateRange = {
+      from: new Date(fromStr)
+    };
+    if (toStr) {
+      range.to = new Date(toStr);
+    }
+    return range;
+  };
+
+  const [dateRange, setDateRange] = useState<CalendarDateRange | undefined>(initDateRange());
   const [loading, setLoading] = useState(true);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [transactionTags, setTransactionTags] = useState<Map<string, Tag[]>>(
@@ -198,6 +213,10 @@ export default function Analysis() {
               onClick={() => {
                 setDateRange(undefined);
                 setSelectedTagIds([]);
+                // Clear URL params
+                searchParams.delete('from');
+                searchParams.delete('to');
+                setSearchParams(searchParams);
               }}
               className="text-sm"
             >
@@ -258,7 +277,23 @@ export default function Analysis() {
               <Calendar
                 mode="range"
                 selected={dateRange}
-                onSelect={(range) => setDateRange(range || undefined)}
+                onSelect={(range) => {
+                  setDateRange(range || undefined);
+                  
+                  // Update URL params
+                  if (!range) {
+                    searchParams.delete('from');
+                    searchParams.delete('to');
+                  } else {
+                    searchParams.set('from', range.from.toISOString());
+                    if (range.to) {
+                      searchParams.set('to', range.to.toISOString());
+                    } else {
+                      searchParams.delete('to');
+                    }
+                  }
+                  setSearchParams(searchParams);
+                }}
                 numberOfMonths={2}
                 className="rounded-md border"
               />
@@ -297,7 +332,7 @@ export default function Analysis() {
                         <TableHead className="w-[80px]">Type</TableHead>
                         <TableHead className="text-right w-[120px]">Amount</TableHead>
                         <TableHead className="text-right w-[120px]">Balance</TableHead>
-                        <TableHead className="w-[250px]">Tags</TableHead>
+                        <TableHead className="w-[200px] text-center">Tags</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -353,7 +388,7 @@ export default function Analysis() {
                           <TableCell className="text-right font-medium tabular-nums">
                             {formatAmount(transaction.closingBalance)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <TransactionTags
                               transactionId={transaction.transactionId}
                               tags={
