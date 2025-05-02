@@ -153,6 +153,18 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           </Button>
           <Button
             asChild
+            className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full rounded-lg font-semibold"
+          >
+            <Link to="/analysis?month=april">April</Link>
+          </Button>
+          <Button
+            asChild
+            className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full rounded-lg font-semibold"
+          >
+            <Link to="/analysis?month=may">May</Link>
+          </Button>
+          <Button
+            asChild
             variant="outline"
             className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
           >
