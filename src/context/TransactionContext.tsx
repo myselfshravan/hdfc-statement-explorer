@@ -4,7 +4,6 @@ import React, {
   useState,
   ReactNode,
   useCallback,
-  useMemo,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -47,7 +46,6 @@ interface TransactionContextType {
   loadSavedStatements: () => Promise<void>;
   loadStatement: (id: string) => Promise<void>;
   currentGroup: StatementGroup | null;
-  temporaryStatementId: string | null;
 }
 
 const defaultSummary: StatementSummary = {
@@ -70,19 +68,22 @@ const TransactionContext = createContext<TransactionContextType | undefined>(
 export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const [currentGroup, setCurrentGroup] = useState<StatementGroup | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    Transaction[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<StatementSummary | null>(null);
-  const [temporaryStatementId, setTemporaryStatementId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [upiFilter, setUpiFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [savedStatements, setSavedStatements] = useState<Array<{
-    id: string;
-    name: string;
-    created_at: string;
-    groupId: string;
-  }>>([]);
+  const [savedStatements, setSavedStatements] = useState<
+    Array<{
+      id: string;
+      name: string;
+      created_at: string;
+      groupId: string;
+    }>
+  >([]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -135,41 +136,61 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("No transactions found in the statement");
       }
 
-      // Set the data in context
       setTransactions(parsedTransactions);
       setFilteredTransactions(parsedTransactions);
       setSummary(parsedSummary);
 
       if (!user) {
-        // For non-logged in users, use temporary ID
-        const tempId = uuidv4();
-        setTemporaryStatementId(tempId);
-        navigate(`/statement/${tempId}`);
-      } else {
-        // For logged-in users, save to database first
-        const statementId = uuidv4();
-        const { error: statementError } = await supabase.from("statements").insert({
-          id: statementId,
-          name: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as default name
-          user_id: user.id,
-          summary: parsedSummary,
-          transactions: parsedTransactions.map(t => ({
-            ...t,
-            date: t.date.toISOString(),
-          })),
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to analyze statements",
+          variant: "destructive",
         });
-
-        if (statementError) throw statementError;
-        navigate(`/statement/${statementId}`);
+        return;
       }
 
-      toast({
-        title: user ? "Statement Saved ✨" : "Analysis Ready ✨",
-        description: user
-          ? `Statement saved with ${parsedTransactions.length} transactions. Opening analysis view...`
-          : `Found ${parsedTransactions.length} transactions. Sign in to save your analysis.`,
-        duration: 5000,
+      // Auto-save the statement with a default name
+      const statementId = uuidv4();
+      const defaultName = `Statement ${parsedSummary.startDate.toLocaleDateString()} - ${parsedSummary.endDate.toLocaleDateString()}`;
+      
+      const { error: statementError } = await supabase.from("statements").insert({
+        id: statementId,
+        name: defaultName,
+        user_id: user.id,
+        summary: parsedSummary,
+        transactions: parsedTransactions.map(t => ({
+          ...t,
+          date: t.date.toISOString(),
+        })),
       });
+
+      if (statementError) {
+        console.error('Error saving statement:', statementError);
+        throw new Error('Failed to save statement. Please try again.');
+      }
+
+      // Merge into the super statement like we do in saveStatement
+      const superStatement = await superStatementManager.mergeStatement(
+        user.id,
+        parsedTransactions,
+        parsedSummary
+      );
+
+      // Update the UI with the merged data
+      setTransactions(superStatement.transactions);
+      setFilteredTransactions(superStatement.transactions);
+      setSummary(superStatement.summary);
+
+      toast({
+        title: "Statement uploaded successfully",
+        description: `${parsedTransactions.length} transactions found and saved`
+      });
+
+      // Navigate to the saved statement view
+      navigate(`/statement/${statementId}`);
+
+      // Refresh the list of saved statements
+      await loadSavedStatements();
     } catch (error) {
       console.error("Error parsing statement:", error);
       toast({
@@ -186,9 +207,8 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const saveStatement = async (name: string) => {
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description:
-          "You can analyze statements without logging in, but saving requires authentication. Please sign in to save this statement.",
+        title: "Authentication required",
+        description: "Please sign in to save statements",
         variant: "destructive",
       });
       return;
@@ -207,22 +227,20 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       const statementId = uuidv4();
 
       // First save individual statement for reference
-      const { error: statementError } = await supabase
-        .from("statements")
-        .insert({
-          id: statementId,
-          name,
-          user_id: user.id,
-          summary,
-          transactions: transactions.map((t) => ({
-            ...t,
-            date: t.date.toISOString(),
-          })),
-        });
+      const { error: statementError } = await supabase.from("statements").insert({
+        id: statementId,
+        name,
+        user_id: user.id,
+        summary,
+        transactions: transactions.map(t => ({
+          ...t,
+          date: t.date.toISOString(),
+        })),
+      });
 
       if (statementError) {
-        console.error("Error saving individual statement:", statementError);
-        throw new Error("Failed to save statement. Please try again.");
+        console.error('Error saving individual statement:', statementError);
+        throw new Error('Failed to save statement. Please try again.');
       }
 
       // Then merge into the super statement
@@ -278,7 +296,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
           id: item.id,
           name: item.name,
           created_at: item.created_at,
-          groupId: item.id, // Use statement id as groupId since we're not using groups anymore
+          groupId: item.id // Use statement id as groupId since we're not using groups anymore
         }))
       );
     } catch (error) {
@@ -291,22 +309,8 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const loadStatement = useCallback(async (id: string) => {
-    // Prevent loading if we already have this statement's data
-    if (currentGroup?.statements[0]?.id === id) {
-      return;
-    }
-
-    // For temporary statements, just verify the ID matches
-    if (id === temporaryStatementId && transactions.length > 0) {
-      return;
-    }
-
-    // Only logged-in users can load from database
-    if (!user) {
-      navigate("/");
-      return;
-    }
+  const loadStatement = async (id: string) => {
+    if (!user) return;
 
     setIsLoading(true);
     try {
@@ -320,35 +324,39 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       if (!statement) throw new Error("Statement not found");
 
-      // Process and set all the data at once to minimize rerenders
-      const parsedTransactions = statement.transactions.map(
-        (t: Omit<Transaction, "date"> & { date: string }) => ({
-          ...t,
-          date: new Date(t.date),
-        })
-      );
+      // Only load and update state if it's a different statement
+      if (!currentGroup?.statements[0] || currentGroup.statements[0].id !== id) {
+        // Set the loaded statement's transactions in UI
+        const parsedTransactions = statement.transactions.map(
+          (t: Omit<Transaction, "date"> & { date: string }) => ({
+            ...t,
+            date: new Date(t.date),
+          })
+        );
 
-      setTransactions(parsedTransactions);
-      setFilteredTransactions(parsedTransactions);
-      setSummary({
-        ...statement.summary,
-        startDate: new Date(statement.summary.startDate),
-        endDate: new Date(statement.summary.endDate),
-      });
+        setTransactions(parsedTransactions);
+        setFilteredTransactions(parsedTransactions);
+        setSummary({
+          ...statement.summary,
+          startDate: new Date(statement.summary.startDate),
+          endDate: new Date(statement.summary.endDate),
+        });
 
-      setCurrentGroup({
-        id: statement.id,
-        userId: user.id,
-        firstDate: new Date(statement.summary.startDate),
-        lastDate: new Date(statement.summary.endDate),
-        mergedSummary: statement.summary,
-        statements: [statement],
-      });
+        setCurrentGroup({
+          id: statement.id,
+          userId: user.id,
+          firstDate: new Date(statement.summary.startDate),
+          lastDate: new Date(statement.summary.endDate),
+          mergedSummary: statement.summary,
+          statements: [statement]
+        });
 
-      toast({
-        title: "Statement loaded",
-        description: `Loaded statement: ${statement.name}`,
-      });
+        // Show toast only when loading a different statement
+        toast({
+          title: "Statement loaded",
+          description: `Loaded statement: ${statement.name}`,
+        });
+      }
     } catch (error) {
       console.error("Error loading statement:", error);
       toast({
@@ -356,11 +364,10 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         description: "Failed to load statement",
         variant: "destructive",
       });
-      navigate("/");
     } finally {
       setIsLoading(false);
     }
-  }, [currentGroup?.statements, temporaryStatementId, transactions.length, user, navigate]);
+  };
 
   // Load saved statements when user changes
   React.useEffect(() => {
@@ -371,42 +378,28 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  // Memoize context value
-  const value = useMemo<TransactionContextType>(() => ({
-    transactions,
-    filteredTransactions,
-    isLoading,
-    summary,
-    uploadAndParseStatement,
-    dateRange,
-    setDateRange,
-    upiFilter,
-    setUpiFilter,
-    categoryFilter,
-    setCategoryFilter,
-    resetFilters,
-    saveStatement,
-    savedStatements,
-    loadSavedStatements,
-    loadStatement,
-    currentGroup,
-    temporaryStatementId
-  }), [
-    transactions,
-    filteredTransactions,
-    isLoading,
-    summary,
-    dateRange,
-    upiFilter,
-    categoryFilter,
-    savedStatements,
-    loadStatement,
-    currentGroup,
-    temporaryStatementId
-  ]);
-
   return (
-    <TransactionContext.Provider value={value}>
+    <TransactionContext.Provider
+      value={{
+        transactions,
+        filteredTransactions,
+        isLoading,
+        summary,
+        uploadAndParseStatement,
+        dateRange,
+        setDateRange,
+        upiFilter,
+        setUpiFilter,
+        categoryFilter,
+        setCategoryFilter,
+        resetFilters,
+        saveStatement,
+        savedStatements,
+        loadSavedStatements,
+        loadStatement,
+        currentGroup,
+      }}
+    >
       {children}
     </TransactionContext.Provider>
   );
@@ -415,7 +408,9 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 export const useTransactions = () => {
   const context = useContext(TransactionContext);
   if (context === undefined) {
-    throw new Error("useTransactions must be used within a TransactionProvider");
+    throw new Error(
+      "useTransactions must be used within a TransactionProvider"
+    );
   }
   return context;
 };

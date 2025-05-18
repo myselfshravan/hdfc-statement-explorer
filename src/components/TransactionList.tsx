@@ -29,48 +29,12 @@ const formatDate = (date: Date): string => {
 };
 
 const TransactionList: React.FC = () => {
-  const { filteredTransactions, isLoading } = useTransactions();
-
+  const { filteredTransactions } = useTransactions();
+  
   // Temporary function to handle tag updates - will be implemented properly later
   const handleTagsChange = () => {
     // Will be implemented when tag refresh is needed
   };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Loading Transactions...</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="text-sm text-gray-600">
-              Processing your statement data...
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!filteredTransactions.length) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No Transactions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-[300px]">
-          <div className="text-center">
-            <p className="text-gray-600">No transactions to display</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Try uploading a statement to see your transactions
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -83,33 +47,19 @@ const TransactionList: React.FC = () => {
             <TableHeader className="sticky top-0 bg-white z-10 border-b">
               <TableRow>
                 <TableHead className="w-[90px] md:w-[120px]">Date</TableHead>
-                <TableHead className="min-w-[140px] md:min-w-[300px]">
-                  Description
-                </TableHead>
-                <TableHead className="hidden md:table-cell w-[120px]">
-                  Category
-                </TableHead>
-                <TableHead className="text-right w-[100px] md:w-[150px]">
-                  Amount
-                </TableHead>
-                <TableHead className="text-right hidden md:table-cell w-[150px]">
-                  Balance
-                </TableHead>
-                <TableHead className="hidden md:table-cell w-[130px] text-center">
-                  Tags
-                </TableHead>
+                <TableHead className="min-w-[140px] md:min-w-[300px]">Description</TableHead>
+                <TableHead className="hidden md:table-cell w-[120px]">Category</TableHead>
+                <TableHead className="text-right w-[100px] md:w-[150px]">Amount</TableHead>
+                <TableHead className="text-right hidden md:table-cell w-[150px]">Balance</TableHead>
+                <TableHead className="hidden md:table-cell w-[130px] text-center">Tags</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTransactions.map((transaction, index) => (
                 <TableRow key={index} className="hover:bg-muted/50">
-                  <TableCell className="text-sm md:text-base">
-                    {formatDate(transaction.date)}
-                  </TableCell>
+                  <TableCell className="text-sm md:text-base">{formatDate(transaction.date)}</TableCell>
                   <TableCell className="max-w-[140px] md:max-w-xs truncate">
-                    <div className="text-sm md:text-base">
-                      {transaction.narration}
-                    </div>
+                    <div className="text-sm md:text-base">{transaction.narration}</div>
                     {transaction.upiId && (
                       <div className="text-xs text-gray-500 truncate">
                         UPI: {transaction.upiId}
@@ -140,8 +90,8 @@ const TransactionList: React.FC = () => {
                     {formatCurrency(transaction.closingBalance)}
                   </TableCell>
                   <TableCell className="hidden md:table-cell px-4 py-2 text-center">
-                    <TransactionTags
-                      transactionId={transaction.transactionId}
+                    <TransactionTags 
+                      transactionId={transaction.transactionId} 
                       tags={transaction.tags || []}
                       onTagsChange={handleTagsChange}
                     />

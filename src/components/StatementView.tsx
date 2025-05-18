@@ -1,118 +1,60 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import { useAuth } from "@/context/AuthContext";
 import SummaryStats from "./SummaryStats";
 import TransactionList from "./TransactionList";
 import SaveStatement from "./SaveStatement";
-import { Card, CardContent, CardDescription } from "./ui/card";
+import { Card, CardDescription } from "./ui/card";
 import { Button } from "./ui/button";
 import { LogIn } from "lucide-react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 const StatementView: React.FC = () => {
-  const {
-    transactions,
-    summary,
-    loadStatement,
-    isLoading,
-    currentGroup,
-    temporaryStatementId,
-  } = useTransactions();
+  const { transactions, summary, loadStatement, isLoading, currentGroup } = useTransactions();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const shouldLoadStatement = useCallback(() => {
-    if (!id) return false;
-    if (!user && id !== temporaryStatementId) return false;
-    if (id === temporaryStatementId && transactions.length > 0) return false;
-    return true;
-  }, [id, user, temporaryStatementId, transactions.length]);
+  const hasData = transactions.length > 0;
 
   useEffect(() => {
-    if (!id) {
-      navigate("/");
-      return;
-    }
-
-    if (!user && id !== temporaryStatementId) {
-      navigate("/");
-      return;
-    }
-
-    // Only load if necessary
-    if (shouldLoadStatement()) {
+    if (id && user && !isLoading && (!transactions.length || currentGroup?.statements[0]?.id !== id)) {
       loadStatement(id);
     }
-  }, [id, shouldLoadStatement, navigate, loadStatement]);
+  }, [id, user, isLoading, currentGroup, transactions]);
 
-  // Don't show anything until we have transactions to display
-  if (!transactions.length) {
-    if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
-          <p className="text-gray-600 font-medium">
-            Loading your statement analysis...
-          </p>
-        </div>
-      );
-    }
+  if (!hasData) {
     return null;
   }
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto py-8 px-4 md:px-8">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="text-center md:text-left">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Statement Analysis
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Detailed insights into your transactions
-          </p>
+    <div className="flex flex-col gap-6 w-full">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 px-4 md:px-8 lg:max-w-6xl lg:mx-auto text-center md:text-left w-full">
+        <div className="w-full md:w-auto">
+          <h2 className="text-2xl font-bold">Statement Analysis</h2>
         </div>
-
-        <div className="flex-shrink-0">
-          {user ? (
+        {user ? (
+          <div className="w-full md:w-auto flex justify-center md:justify-end">
             <SaveStatement />
-          ) : (
-            <Card className="bg-blue-50 border-blue-100">
-              <CardContent className="py-4 px-6">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="text-center sm:text-left">
-                    <h3 className="font-medium text-blue-900">
-                      Save Your Analysis
-                    </h3>
-                    <p className="text-sm text-blue-700">
-                      Sign in to save and access later
-                    </p>
-                  </div>
-                  <Button variant="outline" asChild className="bg-white">
-                    <Link to="/auth" className="flex items-center gap-2">
-                      <LogIn className="h-4 w-4" />
-                      Sign In
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
+          </div>
+        ) : (
+          <div className="w-full md:w-auto flex justify-center md:justify-end">
+            <Card className="p-4">
+              <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span>Sign in to save this statement</span>
+                <Button variant="outline" asChild size="sm">
+                  <Link to="/auth" className="flex items-center gap-1">
+                    <LogIn className="h-4 w-4" />
+                    Sign In
+                  </Link>
+                </Button>
+              </CardDescription>
             </Card>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Main Content */}
-      <div className="grid gap-8">
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Summary Overview</h2>
-          <SummaryStats />
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
-          <TransactionList />
-        </section>
+      <div className="flex flex-col w-full max-w-6xl mx-auto px-2 md:px-4 lg:px-6 gap-4">
+        <SummaryStats />
+        <TransactionList />
       </div>
     </div>
   );
