@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDateRange } from "@/types/transaction";
 import { Calendar } from "@/components/ui/calendar";
 import { TagFilter } from "@/components/TagFilter";
+import { useSearchParams } from "react-router-dom";
 import { tagManager } from "@/utils/tagManager";
 import {
   Table,
@@ -37,13 +38,31 @@ function formatAmount(amount: number): string {
 }
 
 export default function Analysis() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<StatementSummary | null>(null);
   const [filteredTransactions, setFilteredTransactions] = useState<
     Transaction[]
   >([]);
-  const [dateRange, setDateRange] = useState<CalendarDateRange | undefined>();
+  // Initialize date range from URL params
+  const initDateRange = (): CalendarDateRange | undefined => {
+    const fromStr = searchParams.get("from");
+    const toStr = searchParams.get("to");
+    if (!fromStr) return undefined;
+
+    const range: CalendarDateRange = {
+      from: new Date(fromStr),
+    };
+    if (toStr) {
+      range.to = new Date(toStr);
+    }
+    return range;
+  };
+
+  const [dateRange, setDateRange] = useState<CalendarDateRange | undefined>(
+    initDateRange()
+  );
   const [loading, setLoading] = useState(true);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [transactionTags, setTransactionTags] = useState<Map<string, Tag[]>>(
@@ -126,8 +145,24 @@ export default function Analysis() {
 
   useEffect(() => {
     let filtered = [...transactions];
-
-    if (dateRange?.from) {
+    
+    const monthParam = searchParams.get('month')?.toLowerCase();
+    if (monthParam) {
+      // Convert month name to number (0-based index)
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                     'july', 'august', 'september', 'october', 'november', 'december'];
+      const targetMonth = months.indexOf(monthParam);
+      if (targetMonth !== -1) {
+        // Get all matching month transactions
+        filtered = filtered.filter(tx => tx.date.getMonth() === targetMonth);
+        
+        // Find latest year for this month
+        if (filtered.length > 0) {
+          const latestYear = Math.max(...filtered.map(tx => tx.date.getFullYear()));
+          filtered = filtered.filter(tx => tx.date.getFullYear() === latestYear);
+        }
+      }
+    } else if (dateRange?.from) {
       filtered = filtered.filter(
         (tx) =>
           tx.date >= dateRange.from &&
@@ -196,6 +231,10 @@ export default function Analysis() {
               onClick={() => {
                 setDateRange(undefined);
                 setSelectedTagIds([]);
+                // Clear URL params
+                searchParams.delete("from");
+                searchParams.delete("to");
+                setSearchParams(searchParams);
               }}
               className="text-sm"
             >
@@ -215,6 +254,19 @@ export default function Analysis() {
             </p>
             {filteredTransactions.length > 0 && (
               <p className="text-xs text-gray-500 mt-1">
+                {formatDate(
+                  filteredTransactions.reduce(
+                    (min, tx) => (tx.date < min ? tx.date : min),
+                    filteredTransactions[0].date
+                  )
+                )}{" "}
+                -{" "}
+                {formatDate(
+                  filteredTransactions.reduce(
+                    (max, tx) => (tx.date > max ? tx.date : max),
+                    filteredTransactions[0].date
+                  )
+                )}
                 {formatDate(
                   filteredTransactions.reduce(
                     (min, tx) => (tx.date < min ? tx.date : min),
@@ -266,8 +318,24 @@ export default function Analysis() {
               <Calendar
                 mode="range"
                 selected={dateRange}
-                onSelect={(range) => setDateRange(range || undefined)}
-                numberOfMonths={2}
+                onSelect={(range) => {
+                  setDateRange(range || undefined);
+
+                  // Update URL params
+                  if (!range) {
+                    searchParams.delete("from");
+                    searchParams.delete("to");
+                  } else {
+                    searchParams.set("from", range.from.toISOString());
+                    if (range.to) {
+                      searchParams.set("to", range.to.toISOString());
+                    } else {
+                      searchParams.delete("to");
+                    }
+                  }
+                  setSearchParams(searchParams);
+                }}
+                numberOfMonths={1}
                 className="rounded-md border"
               />
             </Card>
@@ -300,28 +368,52 @@ export default function Analysis() {
                   className="overflow-auto"
                   style={{ maxHeight: "calc(100vh - 400px)" }}
                 >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Transactions</h2>
+              <span className="text-sm text-muted-foreground">
+                Showing {filteredTransactions.length} of {transactions.length}{" "}
+                transactions
+              </span>
+            </div>
+            <div>
+              {/* Desktop view */}
+              <div className="hidden md:block rounded-md border">
+                <div
+                  className="overflow-auto"
+                  style={{ maxHeight: "calc(100vh - 400px)" }}
+                >
                   <Table>
                     <TableHeader className="sticky top-0 bg-background z-10 border-b">
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="w-[100px]">Date</TableHead>
                         <TableHead className="min-w-[300px]">
+                          
                           Description
+                        
                         </TableHead>
                         <TableHead className="w-[80px]">Type</TableHead>
                         <TableHead className="text-right w-[120px]">
+                          
                           Amount
+                        
                         </TableHead>
                         <TableHead className="text-right w-[120px]">
+                          
                           Balance
+                        
                         </TableHead>
-                        <TableHead className="w-[250px]">Tags</TableHead>
+                        <TableHead className="w-[200px] text-center">
+                          Tags
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredTransactions.map((transaction, index) => (
                         <TableRow
+                        <TableRow
                           key={transaction.transactionId}
                           className={`${
+                            index % 2 === 0 ? "bg-muted/50" : ""
                             index % 2 === 0 ? "bg-muted/50" : ""
                           } transition-colors`}
                         >
@@ -332,9 +424,15 @@ export default function Analysis() {
                             <div className="flex flex-col gap-1">
                               <div className="font-medium">
                                 {transaction.narration.split("-")[0]}
+                                {transaction.narration.split("-")[0]}
                               </div>
                               {transaction.narration.split("-").length > 1 && (
+                              {transaction.narration.split("-").length > 1 && (
                                 <div className="text-sm text-muted-foreground">
+                                  {transaction.narration
+                                    .split("-")
+                                    .slice(1)
+                                    .join("-")}
                                   {transaction.narration
                                     .split("-")
                                     .slice(1)
@@ -373,10 +471,13 @@ export default function Analysis() {
                           <TableCell className="text-right font-medium tabular-nums">
                             {formatAmount(transaction.closingBalance)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <TransactionTags
                               transactionId={transaction.transactionId}
                               tags={
+                                transactionTags.get(
+                                  transaction.transactionId
+                                ) || []
                                 transactionTags.get(
                                   transaction.transactionId
                                 ) || []
@@ -392,7 +493,36 @@ export default function Analysis() {
                   </Table>
                 </div>
               </div>
+                </div>
+              </div>
 
+              {/* Mobile view */}
+              <div className="md:hidden rounded-md border">
+                <div
+                  className="space-y-4 p-4 overflow-auto"
+                  style={{ maxHeight: "calc(100vh - 400px)" }}
+                >
+                  {filteredTransactions.map((transaction, index) => (
+                    <div
+                      key={transaction.transactionId}
+                      className={`rounded-lg border p-4 ${
+                        index % 2 === 0 ? "bg-muted/50" : ""
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-medium">
+                          {formatDate(transaction.date)}
+                        </span>
+                        <span
+                          className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            transaction.type === "credit"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                              : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                          }`}
+                        >
+                          {transaction.type}
+                        </span>
+                      </div>
               {/* Mobile view */}
               <div className="md:hidden rounded-md border">
                 <div
@@ -439,7 +569,32 @@ export default function Analysis() {
                           </div>
                         )}
                       </div>
+                      <div className="space-y-2">
+                        <div className="font-medium">
+                          {transaction.narration.split("-")[0]}
+                        </div>
+                        {transaction.narration.split("-").length > 1 && (
+                          <div className="text-sm text-muted-foreground">
+                            {transaction.narration
+                              .split("-")
+                              .slice(1)
+                              .join("-")}
+                          </div>
+                        )}
+                        {transaction.upiId && (
+                          <div className="text-xs text-muted-foreground font-mono">
+                            {transaction.upiId}
+                          </div>
+                        )}
+                      </div>
 
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                        <div className="space-y-1">
+                          <div className="text-sm text-muted-foreground">
+                            Amount
+                          </div>
+                          <div
+                            className={`font-medium ${
                       <div className="flex justify-between items-center mt-3 pt-3 border-t">
                         <div className="space-y-1">
                           <div className="text-sm text-muted-foreground">
@@ -464,7 +619,41 @@ export default function Analysis() {
                           </div>
                         </div>
                       </div>
+                            }`}
+                          >
+                            {formatAmount(transaction.amount)}
+                          </div>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <div className="text-sm text-muted-foreground">
+                            Balance
+                          </div>
+                          <div className="font-medium">
+                            {formatAmount(transaction.closingBalance)}
+                          </div>
+                        </div>
+                      </div>
 
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="flex justify-center">
+                          <TransactionTags
+                            transactionId={transaction.transactionId}
+                            tags={
+                              transactionTags.get(transaction.transactionId) ||
+                              []
+                            }
+                            onTagsChange={() =>
+                              handleTagsChange(transaction.transactionId)
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
                       <div className="mt-3 pt-3 border-t">
                         <div className="flex justify-center">
                           <TransactionTags

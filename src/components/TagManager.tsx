@@ -86,6 +86,7 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
       // Notify parent component AFTER successful DB operation
       onTagsChange?.();
       setTagToggleState(tag.id, { isLoading: false, error: null }); // Clear loading state on success
+      setIsOpen(false); // Close dialog after successful update
     } catch (error: any) {
       console.error('Error toggling tag:', error);
       setTagToggleState(tag.id, { isLoading: false, error: error.message || 'Failed to update tag' }); // Set error state

@@ -5,6 +5,7 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Transaction,
   StatementSummary,
@@ -83,6 +84,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       groupId: string;
     }>
   >([]);
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -138,12 +140,57 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       setFilteredTransactions(parsedTransactions);
       setSummary(parsedSummary);
 
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to analyze statements",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Auto-save the statement with a default name
+      const statementId = uuidv4();
+      const defaultName = `Statement ${parsedSummary.startDate.toLocaleDateString()} - ${parsedSummary.endDate.toLocaleDateString()}`;
+      
+      const { error: statementError } = await supabase.from("statements").insert({
+        id: statementId,
+        name: defaultName,
+        user_id: user.id,
+        summary: parsedSummary,
+        transactions: parsedTransactions.map(t => ({
+          ...t,
+          date: t.date.toISOString(),
+        })),
+      });
+
+      if (statementError) {
+        console.error('Error saving statement:', statementError);
+        throw new Error('Failed to save statement. Please try again.');
+      }
+
+      // Merge into the super statement like we do in saveStatement
+      const superStatement = await superStatementManager.mergeStatement(
+        user.id,
+        parsedTransactions,
+        parsedSummary
+      );
+
+      // Update the UI with the merged data
+      setTransactions(superStatement.transactions);
+      setFilteredTransactions(superStatement.transactions);
+      setSummary(superStatement.summary);
+
       toast({
         title: "Statement uploaded successfully",
-        description: `${
-          parsedTransactions.length
-        } transactions found from ${parsedSummary.startDate.toLocaleDateString()} to ${parsedSummary.endDate.toLocaleDateString()}`,
+        description: `${parsedTransactions.length} transactions found and saved`
       });
+
+      // Navigate to the saved statement view
+      navigate(`/statement/${statementId}`);
+
+      // Refresh the list of saved statements
+      await loadSavedStatements();
     } catch (error) {
       console.error("Error parsing statement:", error);
       toast({
