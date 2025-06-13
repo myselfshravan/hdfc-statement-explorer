@@ -13,9 +13,23 @@ const Index = () => {
           </div>
         </main>
 
-        <footer className="py-4 bg-white border-t border-gray-200">
-          <div className="mx-auto px-4 text-center text-sm text-gray-500">
-            HDFC Account Explorer - Analyze your bank statements with ease
+        <footer className="py-6 bg-white border-t border-gray-200">
+          <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-500">
+            <div className="text-center sm:text-left">
+              <span className="font-medium">HDFC Statement Analyser</span> -
+              Explore your bank statements with ease.
+            </div>
+            <div className="mt-2 sm:mt-0 text-center sm:text-right">
+              Built with ❤️‍🔥 by{" "}
+              <a
+                href="https://myselfshravan.github.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Shravan Revanna
+              </a>
+            </div>
           </div>
         </footer>
       </div>
