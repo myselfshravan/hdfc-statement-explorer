@@ -151,7 +151,15 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
       // Auto-save the statement with a default name
       const statementId = uuidv4();
-      const defaultName = `Statement ${parsedSummary.startDate.toLocaleDateString()} - ${parsedSummary.endDate.toLocaleDateString()}`;
+      const formatDate = (date: Date) => {
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        }).format(date);
+      };
+
+      const defaultName = `Statement ${formatDate(parsedSummary.startDate)} - ${formatDate(parsedSummary.endDate)}`;
 
       const { error: statementError } = await supabase
         .from("statements")

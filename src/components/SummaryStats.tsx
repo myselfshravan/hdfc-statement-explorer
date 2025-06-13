@@ -28,8 +28,8 @@ const SummaryStats: React.FC = () => {
   const netFilteredCashflow = totalFilteredCredit - totalFilteredDebit;
 
   function formatSimpleDate(date: Date) {
-    const day = date.getDate();
-    const month = date.toLocaleString("default", { month: "long" });
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
     return { day, month, year };
   }
@@ -47,7 +47,7 @@ const SummaryStats: React.FC = () => {
         </div>
         <div className="mt-2 text-gray-800">
           <p className="text-sm font-medium">
-            {start.day} {start.month} - {end.day} {end.month} {end.year}
+            {start.day}/{start.month}/{start.year} - {end.day}/{end.month}/{end.year}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {filteredTransactions.length} of {summary.transactionCount}{" "}
