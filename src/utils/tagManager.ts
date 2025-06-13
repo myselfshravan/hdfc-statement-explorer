@@ -1,17 +1,45 @@
 import { supabase } from "@/lib/supabaseClient";
-import { Tag, TransactionTag, TagWithTransactions, TAG_COLORS } from "@/types/tags";
+import {
+  Tag,
+  TransactionTag,
+  TagWithTransactions,
+  TAG_COLORS,
+  BatchTransactionTag,
+  TagOperationError
+} from "@/types/tags";
 
 export class TagManager {
-  async createTag(userId: string, name: string, color?: string): Promise<Tag> {
+  async createTag(name: string, color?: string): Promise<Tag> {
     if (!color) {
       // Randomly select a color if none provided
       color = TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)];
     }
 
+    // Check if tag already exists since they're global
+    const { data: existingTag, error: searchError } = await supabase
+      .from('tags')
+      .select()
+      .eq('name', name)
+      .single();
+
+    if (searchError && searchError.code !== 'PGRST116') { // PGRST116 means no rows returned
+      throw new TagOperationError(
+        `Error checking existing tag: ${searchError.message}`,
+        searchError.code,
+        searchError.details
+      );
+    }
+
+    if (existingTag) {
+      throw new TagOperationError(
+        `Tag "${name}" already exists`,
+        'TAG_EXISTS'
+      );
+    }
+
     const { data, error } = await supabase
       .from('tags')
       .insert({
-        user_id: userId,
         name,
         color
       })
@@ -30,7 +58,13 @@ export class TagManager {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to create tag: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
     return data;
   }
 
@@ -40,16 +74,28 @@ export class TagManager {
       .delete()
       .eq('id', tagId);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to update tag: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
   }
 
-  async getUserTags(userId: string): Promise<TagWithTransactions[]> {
+  async getUserTags(): Promise<TagWithTransactions[]> {
     const { data, error } = await supabase
       .from('tags')
       .select('*, transaction_tags(count)')
-      .eq('user_id', userId);
+      .order('name');
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to delete tag: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
 
     return data.map(tag => ({
       ...tag,
@@ -57,108 +103,146 @@ export class TagManager {
     }));
   }
 
-  async getTransactionTags(transactionId: string): Promise<Tag[]> {
+  async getTransactionTags(chqRefNumber: string): Promise<Tag[]> {
     const { data, error } = await supabase
       .from('transaction_tags')
       .select('tags(*)')
-      .eq('transaction_id', transactionId);
+      .eq('chq_ref_number', chqRefNumber);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to get user tags: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
 
     return data.map(item => item.tags);
   }
 
   async addTagToTransaction(
-    userId: string,
-    transactionId: string,
+    chqRefNumber: string,
     tagId: string
   ): Promise<void> {
     const { error } = await supabase
       .from('transaction_tags')
       .insert({
-        user_id: userId,
-        transaction_id: transactionId,
+        chq_ref_number: chqRefNumber,
         tag_id: tagId
       });
 
     if (error) {
       // If error is due to unique constraint, ignore it (idempotent operation)
-      if (error.code !== '23505') throw error;
+      if (error.code !== '23505') {
+        throw new TagOperationError(
+          `Failed to add tag to transaction: ${error.message}`,
+          error.code,
+          error.details
+        );
+      }
     }
   }
 
-  async removeTagFromTransaction(transactionId: string, tagId: string): Promise<void> {
+  async removeTagFromTransaction(chqRefNumber: string, tagId: string): Promise<void> {
     const { error } = await supabase
       .from('transaction_tags')
       .delete()
-      .eq('transaction_id', transactionId)
+      .eq('chq_ref_number', chqRefNumber)
       .eq('tag_id', tagId);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to get transaction tags: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
   }
 
   async getTaggedTransactions(tagId: string): Promise<string[]> {
     const { data, error } = await supabase
       .from('transaction_tags')
-      .select('transaction_id')
+      .select('chq_ref_number')
       .eq('tag_id', tagId);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to remove tag from transaction: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
 
-    return data.map(item => item.transaction_id);
+    return data.map(item => item.chq_ref_number);
   }
 
   // Batch operations for efficiency
   async addTagsToTransaction(
-    userId: string,
-    transactionId: string,
+    chqRefNumber: string,
     tagIds: string[]
   ): Promise<void> {
+    const batchTags: BatchTransactionTag[] = tagIds.map(tagId => ({
+      chq_ref_number: chqRefNumber,
+      tag_id: tagId
+    }));
+
     const { error } = await supabase
       .from('transaction_tags')
-      .insert(
-        tagIds.map(tagId => ({
-          user_id: userId,
-          transaction_id: transactionId,
-          tag_id: tagId
-        }))
-      );
+      .insert(batchTags);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to get tagged transactions: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
   }
 
   async removeTagsFromTransaction(
-    transactionId: string,
+    chqRefNumber: string,
     tagIds: string[]
   ): Promise<void> {
     const { error } = await supabase
       .from('transaction_tags')
       .delete()
-      .eq('transaction_id', transactionId)
+      .eq('chq_ref_number', chqRefNumber)
       .in('tag_id', tagIds);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to add tags to transaction: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
   }
 
   // Get all transactions with their tags
-  async getTransactionsWithTags(transactionIds: string[]): Promise<Map<string, Tag[]>> {
+  async getTransactionsWithTags(chqRefNumbers: string[]): Promise<Map<string, Tag[]>> {
     const { data, error } = await supabase
       .from('transaction_tags')
-      .select('transaction_id, tags(*)')
-      .in('transaction_id', transactionIds);
+      .select('chq_ref_number, tags(*)')
+      .in('chq_ref_number', chqRefNumbers);
 
-    if (error) throw error;
+    if (error) {
+      throw new TagOperationError(
+        `Failed to remove tags from transaction: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
 
     const tagsMap = new Map<string, Tag[]>();
     
     // Initialize map with empty arrays
-    transactionIds.forEach(id => tagsMap.set(id, []));
+    chqRefNumbers.forEach(ref => tagsMap.set(ref, []));
     
     // Fill in tags where they exist
     data.forEach(item => {
-      const existingTags = tagsMap.get(item.transaction_id) || [];
+      const existingTags = tagsMap.get(item.chq_ref_number) || [];
       existingTags.push(item.tags);
-      tagsMap.set(item.transaction_id, existingTags);
+      tagsMap.set(item.chq_ref_number, existingTags);
     });
 
     return tagsMap;

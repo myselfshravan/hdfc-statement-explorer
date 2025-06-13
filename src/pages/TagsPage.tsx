@@ -61,11 +61,11 @@ export function TagsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const userTags = await tagManager.getUserTags(user.id);
+      const userTags = await tagManager.getUserTags();
       setTags(userTags);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching tags:", err);
-      setError(err.message || "Failed to load tags.");
+      setError(err instanceof Error ? err.message : "Failed to load tags.");
     } finally {
       setIsLoading(false);
     }
@@ -77,18 +77,22 @@ export function TagsPage() {
 
   // --- Handlers ---
   const handleCreateTag = async () => { // Removed closeDialog parameter
-    if (!user || !newTagName.trim()) return;
+    if (!newTagName.trim()) return;
     setIsCreating(true);
     setCreateError(null);
     try {
-      const newTagData = await tagManager.createTag(user.id, newTagName.trim(), selectedColor);
+      const newTagData = await tagManager.createTag(newTagName.trim(), selectedColor);
       setTags(prevTags => [...prevTags, { ...newTagData, transaction_count: 0 }]);
       setNewTagName(''); // Reset form
       setSelectedColor(TAG_COLORS[0]); // Reset form
       setIsAddDialogOpen(false); // Close the dialog on success using state
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error creating tag:", err);
-      setCreateError(err.message || "Failed to create tag.");
+      if (err instanceof Error) {
+        setCreateError(err.message);
+      } else {
+        setCreateError("Failed to create tag.");
+      }
       // Keep dialog open on error
     } finally {
       setIsCreating(false);
@@ -118,9 +122,9 @@ export function TagsPage() {
         )
       );
       setIsEditDialogOpen(false); // Close dialog on success
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error updating tag:", err);
-      setUpdateError(err.message || "Failed to update tag.");
+      setUpdateError(err instanceof Error ? err.message : "Failed to update tag.");
       // Keep dialog open on error
     } finally {
       setIsUpdating(false);
@@ -142,12 +146,14 @@ export function TagsPage() {
       await tagManager.deleteTag(deletingTag.id);
       setTags(prevTags => prevTags.filter(tag => tag.id !== deletingTag.id));
       if (onSuccessClose) onSuccessClose(); // Optionally close if callback provided
-    } catch (err: any) {
-      console.error("Error deleting tag:", err);
-      if (err.code === '23503') {
-         setDeleteError("Cannot delete tag: It is assigned to transactions.");
-      } else {
-         setDeleteError(err.message || "Failed to delete tag.");
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("Error deleting tag:", err);
+        if ('code' in err && err.code === '23503') {
+          setDeleteError("Cannot delete tag: It is assigned to transactions.");
+        } else {
+          setDeleteError(err.message || "Failed to delete tag.");
+        }
       }
       // Keep dialog open on error by not calling onSuccessClose
       throw err; // Re-throw error to potentially prevent default close in AlertDialogAction
@@ -195,7 +201,7 @@ export function TagsPage() {
       {/* Main Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Manage Tags</CardTitle>
+          <CardTitle>Manage Global Tags</CardTitle>
           {/* Add New Tag Dialog (Uses manual state) */}
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -203,7 +209,10 @@ export function TagsPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Create New Tag</DialogTitle>
+                <DialogTitle>Create New Global Tag</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Tags are shared across all users. Please ensure the tag name is clear and meaningful for everyone.
+                </p>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <Input

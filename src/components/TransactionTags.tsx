@@ -5,12 +5,12 @@ import { TagManager } from './TagManager';
 import { tagManager } from '@/utils/tagManager'; // Keep for refresh logic
 
 interface TransactionTagsProps {
-  transactionId: string;
+  chqRefNumber: string;
   tags: Tag[]; // Expect tags as a prop
   onTagsChange: () => void; // Expect a refresh handler
 }
 
-export function TransactionTags({ transactionId, tags, onTagsChange }: TransactionTagsProps) {
+export function TransactionTags({ chqRefNumber, tags, onTagsChange }: TransactionTagsProps) {
   // Removed internal state and useEffect
 
   return (
@@ -33,7 +33,7 @@ export function TransactionTags({ transactionId, tags, onTagsChange }: Transacti
         )}
       </div>
       <TagManager
-        transactionId={transactionId}
+        chqRefNumber={chqRefNumber}
         transactionTags={tags}
         onTagsChange={onTagsChange}
         showEditMode={tags.length > 0}

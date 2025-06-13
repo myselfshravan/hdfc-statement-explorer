@@ -98,32 +98,32 @@ export default function Analysis() {
     const loadTransactionTags = async () => {
       if (transactions.length === 0) return;
 
-      const allTransactionIds = transactions.map((t) => t.transactionId);
+      const allRefNumbers = transactions.map((t) => t.chqRefNumber);
       const currentTagsMap = new Map(transactionTags);
       const combinedTagsMap = new Map<string, Tag[]>();
 
-      for (let i = 0; i < allTransactionIds.length; i += BATCH_SIZE) {
-        const batchIds = allTransactionIds.slice(i, i + BATCH_SIZE);
-        if (batchIds.length > 0) {
+      for (let i = 0; i < allRefNumbers.length; i += BATCH_SIZE) {
+        const batchRefs = allRefNumbers.slice(i, i + BATCH_SIZE);
+        if (batchRefs.length > 0) {
           try {
-            const needsFetch = batchIds.some((id) => !currentTagsMap.has(id));
+            const needsFetch = batchRefs.some((ref) => !currentTagsMap.has(ref));
             if (!needsFetch) {
-              batchIds.forEach((id) => {
-                if (currentTagsMap.has(id)) {
-                  combinedTagsMap.set(id, currentTagsMap.get(id)!);
+              batchRefs.forEach((ref) => {
+                if (currentTagsMap.has(ref)) {
+                  combinedTagsMap.set(ref, currentTagsMap.get(ref)!);
                 }
               });
               continue;
             }
 
             const batchTagsMap = await tagManager.getTransactionsWithTags(
-              batchIds
+              batchRefs
             );
-            batchTagsMap.forEach((tags, txId) => {
-              combinedTagsMap.set(txId, tags);
+            batchTagsMap.forEach((tags, refNum) => {
+              combinedTagsMap.set(refNum, tags);
             });
 
-            if (i + BATCH_SIZE < allTransactionIds.length) {
+            if (i + BATCH_SIZE < allRefNumbers.length) {
               await new Promise((resolve) => setTimeout(resolve, 200));
             }
           } catch (error) {
@@ -432,14 +432,14 @@ export default function Analysis() {
                           </TableCell>
                           <TableCell className="text-center">
                             <TransactionTags
-                              transactionId={transaction.transactionId}
+                              chqRefNumber={transaction.chqRefNumber}
                               tags={
                                 transactionTags.get(
-                                  transaction.transactionId
+                                  transaction.chqRefNumber
                                 ) || []
                               }
                               onTagsChange={() =>
-                                handleTagsChange(transaction.transactionId)
+                                handleTagsChange(transaction.chqRefNumber)
                               }
                             />
                           </TableCell>
@@ -525,13 +525,13 @@ export default function Analysis() {
                       <div className="mt-3 pt-3 border-t">
                         <div className="flex justify-center">
                           <TransactionTags
-                            transactionId={transaction.transactionId}
+                            chqRefNumber={transaction.chqRefNumber}
                             tags={
-                              transactionTags.get(transaction.transactionId) ||
+                              transactionTags.get(transaction.chqRefNumber) ||
                               []
                             }
                             onTagsChange={() =>
-                              handleTagsChange(transaction.transactionId)
+                              handleTagsChange(transaction.chqRefNumber)
                             }
                           />
                         </div>

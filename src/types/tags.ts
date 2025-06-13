@@ -1,16 +1,15 @@
 export interface Tag {
   id: string;
-  user_id: string;
   name: string;
   color?: string;
   created_at: string;
   updated_at: string;
 }
 
+// Base interface for transaction tags
 export interface TransactionTag {
-  transaction_id: string;
+  chq_ref_number: string;
   tag_id: string;
-  user_id: string;
   created_at: string;
 }
 
@@ -19,8 +18,14 @@ export interface TagWithTransactions extends Tag {
 }
 
 export interface TransactionWithTags {
-  transaction_id: string;
+  chq_ref_number: string;
   tags: Tag[];
+}
+
+// Type for batch transaction tag operations
+export interface BatchTransactionTag {
+  chq_ref_number: string;
+  tag_id: string;
 }
 
 // List of predefined colors for tags
@@ -38,3 +43,15 @@ export const TAG_COLORS = [
   "#d946ef", // fuchsia
   "#ec4899", // pink
 ];
+
+// Custom error type for tag operations
+export class TagOperationError extends Error {
+  constructor(
+    message: string,
+    public code?: string,
+    public details?: unknown
+  ) {
+    super(message);
+    this.name = 'TagOperationError';
+  }
+}

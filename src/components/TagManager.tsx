@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, TAG_COLORS } from '@/types/tags';
+import { Tag, TAG_COLORS, TagOperationError } from '@/types/tags';
 import { tagManager } from '@/utils/tagManager';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -20,19 +20,23 @@ import {
 } from "@/components/ui/tooltip";
 
 interface TagManagerProps {
-  transactionId: string;
+  chqRefNumber: string;
   transactionTags: Tag[];
   onTagsChange?: () => void;
   showEditMode?: boolean;
 }
 
-export function TagManager({ transactionId, transactionTags: initialTransactionTags, onTagsChange, showEditMode = false }: TagManagerProps) {
+export function TagManager({ chqRefNumber, transactionTags: initialTransactionTags, onTagsChange, showEditMode = false }: TagManagerProps) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [allUserTags, setAllUserTags] = useState<Tag[]>([]); // Renamed state for clarity
-  const [currentTransactionTags, setCurrentTransactionTags] = useState<Tag[]>(initialTransactionTags); // Use prop for initial state
-  // Removed state related to new tag creation: newTagName, selectedColor, isLoading, createError
-  const [isLoadingUserTags, setIsLoadingUserTags] = useState(false); // State for loading user tags
+  const [allUserTags, setAllUserTags] = useState<Tag[]>([]);
+  const [currentTransactionTags, setCurrentTransactionTags] = useState<Tag[]>(initialTransactionTags);
+  // Add back tag creation state
+  const [newTagName, setNewTagName] = useState('');
+  const [selectedColor, setSelectedColor] = useState(TAG_COLORS[0]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isLoadingUserTags, setIsLoadingUserTags] = useState(false);
   const [toggleStates, setToggleStates] = useState<Record<string, { isLoading: boolean; error: string | null }>>({}); // State for toggling individual tags
 
   // Helper to update toggle state for a specific tag
@@ -51,7 +55,7 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
       if (isOpen && user && allUserTags.length === 0) { // Only load if open and not already loaded
         setIsLoadingUserTags(true);
         try {
-          const userTags = await tagManager.getUserTags(user.id);
+          const userTags = await tagManager.getUserTags();
           setAllUserTags(userTags);
         } catch (error) {
           console.error('Error loading user tags:', error);
@@ -75,11 +79,11 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
 
     try {
       if (isTagged) {
-        await tagManager.removeTagFromTransaction(transactionId, tag.id);
+        await tagManager.removeTagFromTransaction(chqRefNumber, tag.id);
         // Update internal state immediately for responsiveness
         setCurrentTransactionTags(prev => prev.filter(t => t.id !== tag.id));
       } else {
-        await tagManager.addTagToTransaction(user.id, transactionId, tag.id);
+        await tagManager.addTagToTransaction(chqRefNumber, tag.id);
         // Update internal state immediately
         setCurrentTransactionTags(prev => [...prev, tag]);
       }
@@ -87,11 +91,19 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
       onTagsChange?.();
       setTagToggleState(tag.id, { isLoading: false, error: null }); // Clear loading state on success
       setIsOpen(false); // Close dialog after successful update
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error toggling tag:', error);
-      setTagToggleState(tag.id, { isLoading: false, error: error.message || 'Failed to update tag' }); // Set error state
-      // Optional: Revert optimistic UI update if needed
-      // setCurrentTransactionTags(initialTransactionTags); // Or revert based on previous state
+      const errorMessage = error instanceof TagOperationError
+        ? error.message
+        : 'Failed to update tag';
+      
+      setTagToggleState(tag.id, {
+        isLoading: false,
+        error: errorMessage
+      });
+      
+      // Revert optimistic UI update on error
+      setCurrentTransactionTags(initialTransactionTags);
     }
   };
 
@@ -136,7 +148,57 @@ export function TagManager({ transactionId, transactionTags: initialTransactionT
             ))}
           </div>
 
-          {/* Removed Create new tag section (Input, Button, Error, Color Picker) */}
+          {/* Create new tag section */}
+          <div className="space-y-4 border rounded-md p-4">
+            <h3 className="text-sm font-medium mb-2">Create New Tag</h3>
+            <div className="flex gap-2 items-center">
+              <Input
+                placeholder="Enter tag name"
+                value={newTagName}
+                onChange={(e) => {
+                  setNewTagName(e.target.value);
+                  setCreateError(null);
+                }}
+                className="flex-1"
+              />
+              <div className="flex gap-1">
+                {TAG_COLORS.map(color => (
+                  <div
+                    key={color}
+                    className={`w-6 h-6 rounded-full cursor-pointer transition-all ${
+                      selectedColor === color ? 'ring-2 ring-offset-2' : ''
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  />
+                ))}
+              </div>
+            </div>
+            {createError && (
+              <p className="text-sm text-red-500">{createError}</p>
+            )}
+            <Button
+              disabled={isCreating || !newTagName.trim()}
+              onClick={async () => {
+                setIsCreating(true);
+                setCreateError(null);
+                try {
+                  const newTag = await tagManager.createTag(newTagName.trim(), selectedColor);
+                  setAllUserTags(prev => [...prev, newTag]);
+                  setNewTagName('');
+                  setSelectedColor(TAG_COLORS[0]);
+                  setIsOpen(false); // Close dialog on success
+                } catch (error) {
+                  console.error('Error creating tag:', error);
+                  setCreateError(error instanceof TagOperationError ? error.message : 'Failed to create tag');
+                } finally {
+                  setIsCreating(false);
+                }
+              }}
+            >
+              {isCreating ? 'Creating...' : 'Create Tag'}
+            </Button>
+          </div>
 
           {/* Available tags */}
           <div className="border rounded-md p-4 mt-4"> {/* Added margin-top for spacing */}
