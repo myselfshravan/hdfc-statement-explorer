@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -38,11 +37,6 @@ export function TagManager({
   const [currentTransactionTags, setCurrentTransactionTags] = useState<Tag[]>(
     initialTransactionTags
   );
-  // Add back tag creation state
-  const [newTagName, setNewTagName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(TAG_COLORS[0]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
   const [isLoadingUserTags, setIsLoadingUserTags] = useState(false);
   const [toggleStates, setToggleStates] = useState<
     Record<string, { isLoading: boolean; error: string | null }>
@@ -166,7 +160,12 @@ export function TagManager({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Manage Tags</DialogTitle>
+          <DialogTitle>
+            Manage Transaction Tags
+            <span className="block text-xs text-muted-foreground mt-1">
+              Visit the Tags page to create new tags
+            </span>
+          </DialogTitle>
         </DialogHeader>
 
         {/* Current tags */}
@@ -188,69 +187,8 @@ export function TagManager({
             )}
           </div>
 
-          {/* Create new tag section */}
-          <div className="space-y-4 border rounded-md p-4">
-            <h3 className="text-sm font-medium mb-2">Create New Tag</h3>
-            <div className="flex gap-2 items-center">
-              <Input
-                placeholder="Enter tag name"
-                value={newTagName}
-                onChange={(e) => {
-                  setNewTagName(e.target.value);
-                  setCreateError(null);
-                }}
-                className="flex-1"
-              />
-              <div className="flex gap-1">
-                {TAG_COLORS.map((color) => (
-                  <div
-                    key={color}
-                    className={`w-6 h-6 rounded-full cursor-pointer transition-all ${
-                      selectedColor === color ? "ring-2 ring-offset-2" : ""
-                    }`}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setSelectedColor(color)}
-                  />
-                ))}
-              </div>
-            </div>
-            {createError && (
-              <p className="text-sm text-red-500">{createError}</p>
-            )}
-            <Button
-              disabled={isCreating || !newTagName.trim()}
-              onClick={async () => {
-                setIsCreating(true);
-                setCreateError(null);
-                try {
-                  const newTag = await tagManager.createTag(
-                    newTagName.trim(),
-                    selectedColor
-                  );
-                  setAllUserTags((prev) => [...prev, newTag]);
-                  setNewTagName("");
-                  setSelectedColor(TAG_COLORS[0]);
-                  setIsOpen(false); // Close dialog on success
-                } catch (error) {
-                  console.error("Error creating tag:", error);
-                  setCreateError(
-                    error instanceof TagOperationError
-                      ? error.message
-                      : "Failed to create tag"
-                  );
-                } finally {
-                  setIsCreating(false);
-                }
-              }}
-            >
-              {isCreating ? "Creating..." : "Create Tag"}
-            </Button>
-          </div>
-
           {/* Available tags */}
-          <div className="border rounded-md p-4 mt-4">
-            {" "}
-            {/* Added margin-top for spacing */}
+          <div className="border rounded-md p-4">
             <h3 className="text-sm font-medium mb-2">Available Tags</h3>
             {isLoadingUserTags ? (
               <div>Loading available tags...</div>

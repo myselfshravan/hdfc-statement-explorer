@@ -1,15 +1,20 @@
 import React, { useState, useRef } from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import { Button } from "@/components/ui/button";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, CheckCircle2, FileSpreadsheet, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 const FileUploader: React.FC = () => {
   const { uploadAndParseStatement, isLoading } = useTransactions();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -43,11 +48,34 @@ const FileUploader: React.FC = () => {
 
   const handleFile = (file: File) => {
     setSelectedFile(file);
+    setUploadSuccess(false);
+    setUploadProgress(0);
   };
 
   const onUploadClick = async () => {
     if (!selectedFile) return;
-    await uploadAndParseStatement(selectedFile);
+    try {
+      setUploadProgress(0);
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 500);
+
+      await uploadAndParseStatement(selectedFile);
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setUploadSuccess(true);
+      
+      toast({
+        title: "Statement uploaded successfully!",
+        description: "Click 'Analyze Statement' to process your data.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const openFileSelector = () => {
@@ -56,13 +84,25 @@ const FileUploader: React.FC = () => {
     }
   };
 
+  const clearFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedFile(null);
+    setUploadSuccess(false);
+    setUploadProgress(0);
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="pt-6">
         <div
-          className={`upload-area ${
-            dragActive ? "border-hdfc-blue bg-blue-50/50" : ""
-          }`}
+          className={cn(
+            "rounded-lg p-8 transition-all duration-200 ease-in-out",
+            !selectedFile && "border-2 border-dashed cursor-pointer",
+            dragActive
+              ? "border-hdfc-blue bg-blue-50/50 scale-102"
+              : !selectedFile && "border-gray-300 hover:border-hdfc-blue hover:bg-gray-50",
+            selectedFile && "bg-gray-50"
+          )}
           onDragEnter={handleDrag}
           onDragOver={handleDrag}
           onDragLeave={handleDrag}
@@ -78,8 +118,24 @@ const FileUploader: React.FC = () => {
           />
 
           <div className="flex flex-col items-center justify-center gap-3">
-            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center">
-              <UploadCloud className="h-7 w-7 text-hdfc-blue" />
+            <div className="relative">
+              <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center transition-all duration-200">
+              {uploadSuccess ? (
+                <CheckCircle2 className="h-7 w-7 text-green-500" />
+              ) : selectedFile ? (
+                <FileSpreadsheet className="h-7 w-7 text-hdfc-blue" />
+              ) : (
+                <UploadCloud className="h-7 w-7 text-hdfc-blue" />
+              )}
+              </div>
+              {selectedFile && (
+                <button
+                  onClick={clearFile}
+                  className="absolute -top-2 -right-2 h-6 w-6 bg-gray-100 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <X className="h-4 w-4 text-gray-600" />
+                </button>
+              )}
             </div>
 
             <div className="text-center">
@@ -88,9 +144,11 @@ const FileUploader: React.FC = () => {
                   ? selectedFile.name
                   : "Upload your HDFC Bank Statement"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Drag & drop or click to select your .xls or .xlsx file
-              </p>
+              {!selectedFile && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Drag & drop or click to select your .xls or .xlsx file
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -100,17 +158,31 @@ const FileUploader: React.FC = () => {
             {isLoading ? (
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">
-                  Processing your statement...
+                  {uploadProgress < 100
+                    ? "Processing your statement..."
+                    : "Upload complete!"}
                 </p>
-                <Progress value={66} className="h-2" />
+                <Progress value={uploadProgress} className="h-2" />
               </div>
             ) : (
-              <Button
-                className="bg-hdfc-blue hover:bg-hdfc-lightBlue"
-                onClick={onUploadClick}
-              >
-                Analyze Statement
-              </Button>
+              <div className="space-y-4">
+                {!uploadSuccess && (
+                  <Button
+                    className="bg-hdfc-blue hover:bg-hdfc-lightBlue w-full"
+                    onClick={onUploadClick}
+                  >
+                    Upload Statement
+                  </Button>
+                )}
+                {uploadSuccess && (
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 w-full text-white font-semibold"
+                    onClick={onUploadClick}
+                  >
+                    Analyze Statement
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         )}

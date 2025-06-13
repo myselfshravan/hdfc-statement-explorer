@@ -40,24 +40,21 @@ const AppHeader: React.FC = () => {
       <div className="container mx-auto py-2 px-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-between">
-            <div className="flex items-center">
-              {/* Logo */}
+            <Link to="/" className="flex items-center">
               <div className="bg-white p-1.5 rounded-xl shadow-md">
                 <img
                   src="/icon.png"
-                  alt="HDFC Statement Explorer"
+                  alt="HDFC Statement Analyser Logo"
                   className="h-8 w-8 sm:h-7 sm:w-7 rounded-lg"
                 />
               </div>
-              <Link to="/">
-                <h1
-                  className="ml-3 text-xl sm:text-2xl font-bold truncate bg-clip-text tracking-tight"
-                  style={shimmerStyle}
-                >
-                  HDFC Account Explorer
-                </h1>
-              </Link>
-            </div>
+              <h1
+                className="ml-3 text-xl sm:text-2xl font-bold truncate bg-clip-text tracking-tight"
+                style={shimmerStyle}
+              >
+                HDFC Statement Analyser
+              </h1>
+            </Link>
             {/* Mobile Navigation */}
             <div className="sm:hidden">
               <Sheet>
@@ -99,7 +96,7 @@ const AppHeader: React.FC = () => {
 
 interface NavigationButtonsProps {
   hasData: boolean;
-  user: any;
+  user: unknown;
   signOut: () => void;
   handleUploadClick: () => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
@@ -150,18 +147,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full rounded-lg font-semibold"
           >
             <Link to="/analysis">Go to Analysis</Link>
-          </Button>
-          <Button
-            asChild
-            className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full rounded-lg font-semibold"
-          >
-            <Link to="/analysis?month=april">April</Link>
-          </Button>
-          <Button
-            asChild
-            className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full rounded-lg font-semibold"
-          >
-            <Link to="/analysis?month=may">May</Link>
           </Button>
           <Button
             asChild
