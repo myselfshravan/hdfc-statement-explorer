@@ -15,7 +15,7 @@ const Index = () => {
 
         <footer className="py-4 bg-white border-t border-gray-200">
           <div className="mx-auto px-4 text-center text-sm text-gray-500">
-            HDFC Account Explorer — Analyze your bank statements with ease
+            HDFC Account Explorer - Analyze your bank statements with ease
           </div>
         </footer>
       </div>

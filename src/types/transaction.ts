@@ -14,8 +14,7 @@ export interface Transaction {
   category?: string;
   upiId?: string;
   merchant?: string;
-  // New fields for merging
-  transactionId: string;
+  // Statement reference
   statementId: string;
   // Tags support
   tags?: Array<Tag>;

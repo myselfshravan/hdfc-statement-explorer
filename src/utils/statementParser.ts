@@ -121,6 +121,7 @@ export const parseHdfcStatement = async (
       const withdrawal = toFloat(row[4]);
       const deposit = toFloat(row[5]);
       const balance = toFloat(row[6]);
+      const chqRefNumber = String(row[2] || "").trim();
 
       const { upiId, merchant } = extractUPIDetails(narration);
 
@@ -133,13 +134,14 @@ export const parseHdfcStatement = async (
         valueDate: date,
         debitAmount: withdrawal,
         creditAmount: deposit,
-        chqRefNumber: "",
+        chqRefNumber: chqRefNumber,
         closingBalance: balance,
         amount,
         type,
         category: type === "credit" ? "Deposit" : "Withdrawal",
         upiId,
         merchant,
+        statementId: "", // This will be set when statement is created
       };
     }
   );

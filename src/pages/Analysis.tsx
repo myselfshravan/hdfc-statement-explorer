@@ -106,7 +106,9 @@ export default function Analysis() {
         const batchRefs = allRefNumbers.slice(i, i + BATCH_SIZE);
         if (batchRefs.length > 0) {
           try {
-            const needsFetch = batchRefs.some((ref) => !currentTagsMap.has(ref));
+            const needsFetch = batchRefs.some(
+              (ref) => !currentTagsMap.has(ref)
+            );
             if (!needsFetch) {
               batchRefs.forEach((ref) => {
                 if (currentTagsMap.has(ref)) {
@@ -145,21 +147,37 @@ export default function Analysis() {
 
   useEffect(() => {
     let filtered = [...transactions];
-    
-    const monthParam = searchParams.get('month')?.toLowerCase();
+
+    const monthParam = searchParams.get("month")?.toLowerCase();
     if (monthParam) {
       // Convert month name to number (0-based index)
-      const months = ['january', 'february', 'march', 'april', 'may', 'june', 
-                     'july', 'august', 'september', 'october', 'november', 'december'];
+      const months = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+      ];
       const targetMonth = months.indexOf(monthParam);
       if (targetMonth !== -1) {
         // Get all matching month transactions
-        filtered = filtered.filter(tx => tx.date.getMonth() === targetMonth);
-        
+        filtered = filtered.filter((tx) => tx.date.getMonth() === targetMonth);
+
         // Find latest year for this month
         if (filtered.length > 0) {
-          const latestYear = Math.max(...filtered.map(tx => tx.date.getFullYear()));
-          filtered = filtered.filter(tx => tx.date.getFullYear() === latestYear);
+          const latestYear = Math.max(
+            ...filtered.map((tx) => tx.date.getFullYear())
+          );
+          filtered = filtered.filter(
+            (tx) => tx.date.getFullYear() === latestYear
+          );
         }
       }
     } else if (dateRange?.from) {
@@ -172,7 +190,7 @@ export default function Analysis() {
 
     if (selectedTagIds.length > 0) {
       filtered = filtered.filter((tx) => {
-        const txTagObjects = transactionTags?.get(tx.transactionId) || [];
+        const txTagObjects = transactionTags?.get(tx.chqRefNumber) || [];
         const txTagIds = txTagObjects.map((t) => t.id);
         return selectedTagIds.some((tagId) => txTagIds.includes(tagId));
       });
@@ -377,7 +395,7 @@ export default function Analysis() {
                     <TableBody>
                       {filteredTransactions.map((transaction, index) => (
                         <TableRow
-                          key={transaction.transactionId}
+                          key={transaction.chqRefNumber}
                           className={`${
                             index % 2 === 0 ? "bg-muted/50" : ""
                           } transition-colors`}
@@ -434,9 +452,8 @@ export default function Analysis() {
                             <TransactionTags
                               chqRefNumber={transaction.chqRefNumber}
                               tags={
-                                transactionTags.get(
-                                  transaction.chqRefNumber
-                                ) || []
+                                transactionTags.get(transaction.chqRefNumber) ||
+                                []
                               }
                               onTagsChange={() =>
                                 handleTagsChange(transaction.chqRefNumber)
@@ -458,7 +475,7 @@ export default function Analysis() {
                 >
                   {filteredTransactions.map((transaction, index) => (
                     <div
-                      key={transaction.transactionId}
+                      key={transaction.chqRefNumber}
                       className={`rounded-lg border p-4 ${
                         index % 2 === 0 ? "bg-muted/50" : ""
                       }`}

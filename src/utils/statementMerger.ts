@@ -10,22 +10,9 @@ import { v4 as uuidv4 } from "uuid";
 export class StatementMerger {
   private root: DateRangeNode | null = null;
 
-  // Generate unique transaction ID based on transaction details
-  generateTransactionId(
-    transaction: Omit<Transaction, "transactionId">
-  ): Promise<string> {
-    const details = `${transaction.date.toISOString()}_${
-      transaction.narration
-    }_${transaction.amount}_${transaction.type}`;
-
-    const encoder = new TextEncoder();
-    const data = encoder.encode(details);
-
-    return crypto.subtle.digest("SHA-256", data).then((hashBuffer) => {
-      return Array.from(new Uint8Array(hashBuffer))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-    });
+  // Get transaction identifier from chqRefNumber
+  getTransactionIdentifier(transaction: Transaction): string {
+    return transaction.chqRefNumber;
   }
 
   // Insert a new date range node into the B-tree
@@ -108,11 +95,10 @@ export class StatementMerger {
     // Process all statements
     for (const statement of statements) {
       for (const transaction of statement.transactions) {
-        const transactionId = await this.generateTransactionId(transaction);
-        if (!uniqueTransactions.has(transactionId)) {
-          uniqueTransactions.set(transactionId, {
+        const identifier = this.getTransactionIdentifier(transaction);
+        if (!uniqueTransactions.has(identifier)) {
+          uniqueTransactions.set(identifier, {
             ...transaction,
-            transactionId,
             statementId: statement.id,
           });
         }
@@ -160,7 +146,7 @@ export class StatementMerger {
 
       if (Math.abs(expectedBalance - transaction.closingBalance) > 0.01) {
         console.warn(
-          `Balance discrepancy detected for transaction: ${transaction.transactionId}`
+          `Balance discrepancy detected for transaction: ${transaction.chqRefNumber}`
         );
         transaction.closingBalance = expectedBalance;
       }

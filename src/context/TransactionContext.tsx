@@ -152,21 +152,23 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       // Auto-save the statement with a default name
       const statementId = uuidv4();
       const defaultName = `Statement ${parsedSummary.startDate.toLocaleDateString()} - ${parsedSummary.endDate.toLocaleDateString()}`;
-      
-      const { error: statementError } = await supabase.from("statements").insert({
-        id: statementId,
-        name: defaultName,
-        user_id: user.id,
-        summary: parsedSummary,
-        transactions: parsedTransactions.map(t => ({
-          ...t,
-          date: t.date.toISOString(),
-        })),
-      });
+
+      const { error: statementError } = await supabase
+        .from("statements")
+        .insert({
+          id: statementId,
+          name: defaultName,
+          user_id: user.id,
+          summary: parsedSummary,
+          transactions: parsedTransactions.map((t) => ({
+            ...t,
+            date: t.date.toISOString(),
+          })),
+        });
 
       if (statementError) {
-        console.error('Error saving statement:', statementError);
-        throw new Error('Failed to save statement. Please try again.');
+        console.error("Error saving statement:", statementError);
+        throw new Error("Failed to save statement. Please try again.");
       }
 
       // Merge into the super statement like we do in saveStatement
@@ -183,7 +185,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
 
       toast({
         title: "Statement uploaded successfully",
-        description: `${parsedTransactions.length} transactions found and saved`
+        description: `${parsedTransactions.length} transactions found and saved`,
       });
 
       // Navigate to the saved statement view
@@ -227,20 +229,22 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       const statementId = uuidv4();
 
       // First save individual statement for reference
-      const { error: statementError } = await supabase.from("statements").insert({
-        id: statementId,
-        name,
-        user_id: user.id,
-        summary,
-        transactions: transactions.map(t => ({
-          ...t,
-          date: t.date.toISOString(),
-        })),
-      });
+      const { error: statementError } = await supabase
+        .from("statements")
+        .insert({
+          id: statementId,
+          name,
+          user_id: user.id,
+          summary,
+          transactions: transactions.map((t) => ({
+            ...t,
+            date: t.date.toISOString(),
+          })),
+        });
 
       if (statementError) {
-        console.error('Error saving individual statement:', statementError);
-        throw new Error('Failed to save statement. Please try again.');
+        console.error("Error saving individual statement:", statementError);
+        throw new Error("Failed to save statement. Please try again.");
       }
 
       // Then merge into the super statement
@@ -296,7 +300,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
           id: item.id,
           name: item.name,
           created_at: item.created_at,
-          groupId: item.id // Use statement id as groupId since we're not using groups anymore
+          groupId: item.id, // Use statement id as groupId since we're not using groups anymore
         }))
       );
     } catch (error) {
@@ -325,7 +329,10 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       if (!statement) throw new Error("Statement not found");
 
       // Only load and update state if it's a different statement
-      if (!currentGroup?.statements[0] || currentGroup.statements[0].id !== id) {
+      if (
+        !currentGroup?.statements[0] ||
+        currentGroup.statements[0].id !== id
+      ) {
         // Set the loaded statement's transactions in UI
         const parsedTransactions = statement.transactions.map(
           (t: Omit<Transaction, "date"> & { date: string }) => ({
@@ -348,7 +355,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
           firstDate: new Date(statement.summary.startDate),
           lastDate: new Date(statement.summary.endDate),
           mergedSummary: statement.summary,
-          statements: [statement]
+          statements: [statement],
         });
 
         // Show toast only when loading a different statement

@@ -46,12 +46,8 @@ export const TAG_COLORS = [
 
 // Custom error type for tag operations
 export class TagOperationError extends Error {
-  constructor(
-    message: string,
-    public code?: string,
-    public details?: unknown
-  ) {
+  constructor(message: string, public code?: string, public details?: unknown) {
     super(message);
-    this.name = 'TagOperationError';
+    this.name = "TagOperationError";
   }
 }

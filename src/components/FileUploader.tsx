@@ -1,10 +1,9 @@
-
-import React, { useState, useRef } from 'react';
-import { useTransactions } from '@/context/TransactionContext';
-import { Button } from '@/components/ui/button';
-import { UploadCloud } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import React, { useState, useRef } from "react";
+import { useTransactions } from "@/context/TransactionContext";
+import { Button } from "@/components/ui/button";
+import { UploadCloud } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 const FileUploader: React.FC = () => {
   const { uploadAndParseStatement, isLoading } = useTransactions();
@@ -15,10 +14,10 @@ const FileUploader: React.FC = () => {
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   };
@@ -27,7 +26,7 @@ const FileUploader: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const files = e.dataTransfer.files;
     if (files && files[0]) {
       handleFile(files[0]);
@@ -36,7 +35,7 @@ const FileUploader: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    
+
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
@@ -61,7 +60,9 @@ const FileUploader: React.FC = () => {
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="pt-6">
         <div
-          className={`upload-area ${dragActive ? 'border-hdfc-blue bg-blue-50/50' : ''}`}
+          className={`upload-area ${
+            dragActive ? "border-hdfc-blue bg-blue-50/50" : ""
+          }`}
           onDragEnter={handleDrag}
           onDragOver={handleDrag}
           onDragLeave={handleDrag}
@@ -75,15 +76,17 @@ const FileUploader: React.FC = () => {
             onChange={handleChange}
             className="hidden"
           />
-          
+
           <div className="flex flex-col items-center justify-center gap-3">
             <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center">
               <UploadCloud className="h-7 w-7 text-hdfc-blue" />
             </div>
-            
+
             <div className="text-center">
               <p className="text-lg font-medium text-gray-700">
-                {selectedFile ? selectedFile.name : "Upload your HDFC Bank Statement"}
+                {selectedFile
+                  ? selectedFile.name
+                  : "Upload your HDFC Bank Statement"}
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 Drag & drop or click to select your .xls or .xlsx file
@@ -91,17 +94,19 @@ const FileUploader: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {selectedFile && (
           <div className="mt-6 text-center">
             {isLoading ? (
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">Processing your statement...</p>
+                <p className="text-sm text-gray-600">
+                  Processing your statement...
+                </p>
                 <Progress value={66} className="h-2" />
               </div>
             ) : (
-              <Button 
-                className="bg-hdfc-blue hover:bg-hdfc-lightBlue" 
+              <Button
+                className="bg-hdfc-blue hover:bg-hdfc-lightBlue"
                 onClick={onUploadClick}
               >
                 Analyze Statement
