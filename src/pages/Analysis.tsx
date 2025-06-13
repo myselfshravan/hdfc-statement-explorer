@@ -26,7 +26,7 @@ function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     year: "numeric",
     month: "2-digit",
-    day: "2-digit"
+    day: "2-digit",
   }).format(date);
 }
 
@@ -234,6 +234,25 @@ export default function Analysis() {
     ),
   };
 
+  function getPayeeName(narration: string) {
+    return narration?.split("-")[1] || "UPI Transaction";
+  }
+
+  function getDescription(narration: string) {
+    const parts = narration?.split("-");
+    if (parts.length > 4)
+      return parts
+        .slice(4)
+        .join(" ")
+        .replace(/[^a-zA-Z0-9\s]/g, "")
+        .trim();
+    return null;
+  }
+
+  function getUpiOnly(upiId: string) {
+    return upiId?.split("-")[0];
+  }
+
   return (
     <div className="container mx-auto py-6 max-w-7xl">
       <div className="flex flex-col gap-6">
@@ -406,19 +425,16 @@ export default function Analysis() {
                           <TableCell>
                             <div className="flex flex-col gap-1">
                               <div className="font-medium">
-                                {transaction.narration.split("-")[0]}
+                                {getPayeeName(transaction.narration)}
                               </div>
-                              {transaction.narration.split("-").length > 1 && (
+                              {getDescription(transaction.narration) && (
                                 <div className="text-sm text-muted-foreground">
-                                  {transaction.narration
-                                    .split("-")
-                                    .slice(1)
-                                    .join("-")}
+                                  {getDescription(transaction.narration)}
                                 </div>
                               )}
                               {transaction.upiId && (
                                 <div className="text-xs text-muted-foreground font-mono">
-                                  {transaction.upiId}
+                                  {getUpiOnly(transaction.upiId)}
                                 </div>
                               )}
                             </div>
@@ -495,21 +511,22 @@ export default function Analysis() {
                         </span>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-1">
+                        {/* Transaction Actor Name (e.g., Merchant or Person) */}
                         <div className="font-medium">
-                          {transaction.narration.split("-")[0]}
+                          {getPayeeName(transaction.narration) ||
+                            "UPI Transaction"}
                         </div>
-                        {transaction.narration.split("-").length > 1 && (
-                          <div className="text-sm text-muted-foreground">
-                            {transaction.narration
-                              .split("-")
-                              .slice(1)
-                              .join("-")}
-                          </div>
-                        )}
+
+                        {/* Description / Context (e.g., payment purpose) */}
+                        <div className="text-sm text-muted-foreground">
+                          {getDescription(transaction.narration)}
+                        </div>
+
+                        {/* UPI ID */}
                         {transaction.upiId && (
-                          <div className="text-xs text-muted-foreground font-mono">
-                            {transaction.upiId}
+                          <div className="text-xs text-muted-foreground font-mono break-all">
+                            {getUpiOnly(transaction.upiId)}
                           </div>
                         )}
                       </div>
