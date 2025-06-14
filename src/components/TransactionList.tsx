@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TransactionTags } from "./TransactionTags";
 import { Tag } from "@/types/tags";
+import { Transaction } from "@/types/transaction";
 import {
   Table,
   TableBody,
@@ -28,10 +29,17 @@ const formatDate = (date: Date): string => {
   });
 };
 
-const TransactionList: React.FC = () => {
-  const { filteredTransactions } = useTransactions();
-  
-  // Temporary function to handle tag updates - will be implemented properly later
+interface TransactionListProps {
+  transactions: Transaction[];
+  isLoading?: boolean;
+  showLoadMore?: boolean;
+}
+
+const TransactionList: React.FC<TransactionListProps> = ({ 
+  transactions,
+  isLoading = false,
+  showLoadMore = false 
+}) => {
   const handleTagsChange = () => {
     // Will be implemented when tag refresh is needed
   };
@@ -55,7 +63,7 @@ const TransactionList: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransactions.map((transaction, index) => (
+          {transactions.map((transaction, index) => (
                 <TableRow key={index} className="hover:bg-muted/50">
                   <TableCell className="text-sm md:text-base">{formatDate(transaction.date)}</TableCell>
                   <TableCell className="max-w-[140px] md:max-w-xs truncate">
@@ -91,7 +99,7 @@ const TransactionList: React.FC = () => {
                   </TableCell>
                   <TableCell className="hidden md:table-cell px-4 py-2 text-center">
                     <TransactionTags 
-                      transactionId={transaction.transactionId} 
+                      chqRefNumber={transaction.chqRefNumber}
                       tags={transaction.tags || []}
                       onTagsChange={handleTagsChange}
                     />
@@ -101,7 +109,7 @@ const TransactionList: React.FC = () => {
             </TableBody>
           </Table>
 
-          {filteredTransactions.length === 0 && (
+          {transactions.length === 0 && (
             <div className="py-8 text-center">
               <p className="text-gray-500">
                 No transactions found with the selected filters
@@ -110,7 +118,7 @@ const TransactionList: React.FC = () => {
           )}
         </ScrollArea>
         <div className="p-4 text-sm text-gray-500">
-          {filteredTransactions.length} transactions
+          {transactions.length} transactions
         </div>
       </CardContent>
     </Card>

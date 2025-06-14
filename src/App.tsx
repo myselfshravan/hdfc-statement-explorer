@@ -9,6 +9,7 @@ import Analysis from "./pages/Analysis";
 import { TagsPage } from "./pages/TagsPage";
 import StatementView from "./components/StatementView";
 import NotFound from "./pages/NotFound";
+import AnonymousStatementView from "./components/AnonymousStatementView";
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/analysis" element={<Analysis />} />
               <Route path="/tags" element={<TagsPage />} />
+              <Route path="/anonymous-analysis" element={<AnonymousStatementView />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

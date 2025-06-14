@@ -1,7 +1,7 @@
 import React from "react";
-import { useTransactions } from "@/context/TransactionContext";
 import { Card } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, Calendar, Filter } from "lucide-react";
+import { StatementSummary, Transaction } from "@/types/transaction";
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-IN", {
@@ -11,20 +11,26 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-const SummaryStats: React.FC = () => {
-  const { summary, filteredTransactions } = useTransactions();
+interface SummaryStatsProps {
+  summary: StatementSummary;
+  transactions?: Transaction[];
+}
 
-  if (!summary) return null;
+const SummaryStats: React.FC<SummaryStatsProps> = ({ 
+  summary,
+  transactions = [] 
+}) => {
 
-  // Calculate filtered summary values
-  const totalFilteredDebit = filteredTransactions.reduce(
+  // Calculate summary values from provided transactions or use summary totals
+  const totalFilteredDebit = transactions.length ? transactions.reduce(
     (sum, t) => sum + t.debitAmount,
     0
-  );
-  const totalFilteredCredit = filteredTransactions.reduce(
+  ) : summary.totalDebit;
+  
+  const totalFilteredCredit = transactions.length ? transactions.reduce(
     (sum, t) => sum + t.creditAmount,
     0
-  );
+  ) : summary.totalCredit;
   const netFilteredCashflow = totalFilteredCredit - totalFilteredDebit;
 
   function formatSimpleDate(date: Date) {
@@ -50,8 +56,7 @@ const SummaryStats: React.FC = () => {
             {start.day}/{start.month}/{start.year} - {end.day}/{end.month}/{end.year}
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            {filteredTransactions.length} of {summary.transactionCount}{" "}
-            transactions
+            {transactions.length || summary.transactionCount} transactions
           </p>
         </div>
       </Card>
@@ -66,7 +71,7 @@ const SummaryStats: React.FC = () => {
           <p className="text-xl md:text-2xl font-bold text-gray-800">
             {formatCurrency(totalFilteredCredit)}
           </p>
-          {filteredTransactions.length !== summary.transactionCount && (
+          {transactions.length > 0 && transactions.length !== summary.transactionCount && (
             <p className="text-xs text-gray-500 mt-1">
               Total: {formatCurrency(summary.totalCredit)}
             </p>
@@ -85,7 +90,7 @@ const SummaryStats: React.FC = () => {
           <p className="text-xl md:text-2xl font-bold text-gray-800">
             {formatCurrency(totalFilteredDebit)}
           </p>
-          {filteredTransactions.length !== summary.transactionCount && (
+          {transactions.length > 0 && transactions.length !== summary.transactionCount && (
             <p className="text-xs text-gray-500 mt-1">
               Total: {formatCurrency(summary.totalDebit)}
             </p>
@@ -108,7 +113,7 @@ const SummaryStats: React.FC = () => {
           >
             {formatCurrency(netFilteredCashflow)}
           </p>
-          {filteredTransactions.length !== summary.transactionCount && (
+          {transactions.length > 0 && transactions.length !== summary.transactionCount && (
             <p className="text-xs text-gray-500 mt-1">
               Total: {formatCurrency(summary.netCashflow)}
             </p>
