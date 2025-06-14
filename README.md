@@ -106,27 +106,28 @@ The application uses a sophisticated merging algorithm that:
 
 1. **Upload & Parse**
 
-   ```
+   ```plaintext
    Excel File → Parser → Transaction Objects → Validation → Storage
    ```
 
 2. **Merging Algorithm**
 
-   ```
+   ```plaintext
    New Statement → Find Overlaps → Deduplicate → Validate Balances → Merge
    ```
 
 3. **Tag Management**
 
-   ```
+   ```plaintext
    Global Tags ← → Transaction Tags ← → Batch Processing
    ```
 
 ### V2 Approach (Current)
 
-Our latest approach significantly improves performance and data management:
+My latest approach significantly improves performance and data management:
 
 #### Super Statement Management
+
 ```mermaid
 graph TD
     A[New Statement] --> B[Extract Transactions]
@@ -147,6 +148,7 @@ graph TD
 ```
 
 Key Improvements:
+
 - Single table storage instead of multiple statement records
 - Built-in deduplication using chqRefNumber
 - Automatic balance validation and correction
@@ -154,6 +156,7 @@ Key Improvements:
 - Maintains running balances across merged statements
 
 #### Tag Management System
+
 ```mermaid
 graph TD
     A[Transaction List] --> B[Bulk Tag Fetch]
@@ -178,6 +181,7 @@ graph TD
 ```
 
 Key Features:
+
 - Efficient bulk tag fetching with getAllTransactionTags
 - O(1) tag lookups using Map data structure
 - Batch operations for tag updates
@@ -185,15 +189,41 @@ Key Features:
 - Real-time tag synchronization
 
 ### V1 Data Flow (Legacy)
-```
-User Upload → Parser → Super Statement Manager → Transaction Context → UI
-                   └→ Statement Storage     ↖→ Tag Manager
+
+```mermaid
+flowchart LR
+  subgraph V1_Data_Flow_Legacy ["V1 Data Flow (Legacy)"]
+    U1[User Upload]
+    P1[Parser]
+    SSM1[Super Statement Manager]
+    TC1[Transaction Context]
+    UI1[UI]
+    SS1[Statement Storage]
+    TM1[Tag Manager]
+
+    U1 --> P1 --> SSM1 --> TC1 --> UI1
+    P1 --> SS1
+    TM1 --> SSM1
+  end
 ```
 
 ### V2 Data Flow (Current)
-```
-User Upload → Parser → Super Statement Manager[JSON] → Transaction Context[Map] → UI
-                   └→ Tag Manager[Batch Ops] ↗        └→ Optimistic Updates
+
+```mermaid
+flowchart LR  
+  subgraph V2_Data_Flow_Current ["V2 Data Flow (Current)"]
+    U2[User Upload]
+    P2[Parser]
+    SSM2[Super Statement Manager- JSON]
+    TC2[Transaction Context - Map]
+    UI2[UI]
+    TM2[Tag Manager - Batch Ops]
+    OU2[Optimistic Updates]
+
+    U2 --> P2 --> SSM2 --> TC2 --> UI2
+    P2 --> TM2 --> SSM2
+    TC2 --> OU2
+  end
 ```
 
 ## Revolutionary Aspects
@@ -388,6 +418,6 @@ MIT License - feel free to use this project for your personal or commercial need
 
 Need help? Here's how to get support:
 
-- 📖 [Documentation](docs/README.md)
-- 💬 [Discussions](https://github.com/yourusername/hdfc-account-explorer/discussions)
-- 🐛 [Bug Reports](https://github.com/yourusername/hdfc-account-explorer/issues)
+- 📖 [Documentation](README.md)
+- 💬 [Discussions](https://github.com/myselfshravan/hdfc-account-explorer/discussions)
+- 🐛 [Bug Reports](https://github.com/myselfshravan/hdfc-account-explorer/issues)
