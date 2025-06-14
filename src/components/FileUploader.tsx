@@ -96,7 +96,7 @@ const FileUploader: React.FC = () => {
       <CardContent className="pt-6">
         <div
           className={cn(
-            "rounded-lg p-8 transition-all duration-200 ease-in-out",
+            "rounded-lg p-4 transition-all duration-200 ease-in-out",
             !selectedFile && "border-2 border-dashed cursor-pointer",
             dragActive
               ? "border-hdfc-blue bg-blue-50/50 scale-102"

@@ -27,7 +27,7 @@ export function SavedStatements() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-xl">
       <CardHeader>
         <CardTitle>Saved Statements</CardTitle>
         <CardDescription>
