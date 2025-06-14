@@ -3,6 +3,19 @@ import { Card } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, Calendar, Filter } from "lucide-react";
 import { StatementSummary, Transaction } from "@/types/transaction";
 
+const defaultSummary: StatementSummary = {
+  totalDebit: 0,
+  totalCredit: 0,
+  netCashflow: 0,
+  startDate: new Date(),
+  endDate: new Date(),
+  startingBalance: 0,
+  endingBalance: 0,
+  transactionCount: 0,
+  creditCount: 0,
+  debitCount: 0
+};
+
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -12,12 +25,12 @@ const formatCurrency = (amount: number): string => {
 };
 
 interface SummaryStatsProps {
-  summary: StatementSummary;
+  summary?: StatementSummary;
   transactions?: Transaction[];
 }
 
 const SummaryStats: React.FC<SummaryStatsProps> = ({ 
-  summary,
+  summary = defaultSummary,
   transactions = [] 
 }) => {
 

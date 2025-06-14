@@ -13,16 +13,66 @@ const StatementView: React.FC = () => {
   const { transactions, summary, loadStatement, isLoading, currentGroup } = useTransactions();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const hasData = transactions.length > 0;
 
   useEffect(() => {
-    if (id && user && !isLoading && (!transactions.length || currentGroup?.statements[0]?.id !== id)) {
-      loadStatement(id);
-    }
-  }, [id, user, isLoading, currentGroup, transactions]);
+    const loadData = async () => {
+      if (!id || !user) return;
+      
+      // Check if we need to load the statement
+      const needsLoad = !currentGroup?.statements[0] || 
+                       currentGroup.statements[0].id !== id ||
+                       transactions.length === 0;
+      
+      console.log('Statement load check:', {
+        id,
+        currentId: currentGroup?.statements[0]?.id,
+        hasTransactions: transactions.length > 0,
+        needsLoad
+      });
 
-  if (!hasData) {
-    return null;
+      if (needsLoad && !isLoading) {
+        try {
+          await loadStatement(id);
+        } catch (error) {
+          console.error('Error loading statement:', error);
+        }
+      }
+    };
+    
+    loadData();
+  }, [id, user, currentGroup?.statements, transactions.length, isLoading, loadStatement]);
+
+  useEffect(() => {
+    console.log('State update:', { 
+      hasTransactions: Boolean(transactions.length), 
+      hasSummary: Boolean(summary),
+      isLoading,
+      currentGroupId: currentGroup?.statements[0]?.id,
+      requestedId: id
+    });
+  }, [transactions, summary, isLoading, currentGroup, id]);
+
+  // Only show loading state or actual data
+  console.log('Render state:', { isLoading, hasData: Boolean(transactions.length) });
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">Loading statement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check for data after loading is complete
+  if (!summary || !transactions.length) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">No statement data found</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -53,8 +103,8 @@ const StatementView: React.FC = () => {
       </div>
 
       <div className="flex flex-col w-full max-w-6xl mx-auto px-2 md:px-4 lg:px-6 gap-4">
-        <SummaryStats />
-        <TransactionList />
+        <SummaryStats summary={summary} transactions={transactions} />
+        <TransactionList transactions={transactions} />
       </div>
     </div>
   );

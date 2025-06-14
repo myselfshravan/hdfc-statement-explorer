@@ -30,15 +30,19 @@ const formatDate = (date: Date): string => {
 };
 
 interface TransactionListProps {
-  transactions: Transaction[];
+  transactions?: Transaction[];
   isLoading?: boolean;
   showLoadMore?: boolean;
+  isAnonymous?: boolean;
 }
 
+const defaultTransactions: Transaction[] = [];
+
 const TransactionList: React.FC<TransactionListProps> = ({ 
-  transactions,
+  transactions = defaultTransactions,
   isLoading = false,
-  showLoadMore = false 
+  showLoadMore = false,
+  isAnonymous = false
 }) => {
   const handleTagsChange = () => {
     // Will be implemented when tag refresh is needed
@@ -59,11 +63,13 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <TableHead className="hidden md:table-cell w-[120px]">Category</TableHead>
                 <TableHead className="text-right w-[100px] md:w-[150px]">Amount</TableHead>
                 <TableHead className="text-right hidden md:table-cell w-[150px]">Balance</TableHead>
-                <TableHead className="hidden md:table-cell w-[130px] text-center">Tags</TableHead>
+                {!isAnonymous && (
+                  <TableHead className="hidden md:table-cell w-[130px] text-center">Tags</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-          {transactions.map((transaction, index) => (
+              {transactions.map((transaction, index) => (
                 <TableRow key={index} className="hover:bg-muted/50">
                   <TableCell className="text-sm md:text-base">{formatDate(transaction.date)}</TableCell>
                   <TableCell className="max-w-[140px] md:max-w-xs truncate">
@@ -97,13 +103,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <TableCell className="text-right hidden md:table-cell">
                     {formatCurrency(transaction.closingBalance)}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell px-4 py-2 text-center">
-                    <TransactionTags 
-                      chqRefNumber={transaction.chqRefNumber}
-                      tags={transaction.tags || []}
-                      onTagsChange={handleTagsChange}
-                    />
-                  </TableCell>
+                  {!isAnonymous && (
+                    <TableCell className="hidden md:table-cell px-4 py-2 text-center">
+                      <TransactionTags 
+                        chqRefNumber={transaction.chqRefNumber}
+                        tags={transaction.tags || []}
+                        onTagsChange={handleTagsChange}
+                      />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

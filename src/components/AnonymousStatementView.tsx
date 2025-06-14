@@ -13,7 +13,22 @@ interface AnonymousData {
 }
 
 export const AnonymousStatementView: React.FC = () => {
-  const [data, setData] = useState<AnonymousData | null>(null);
+  const [data, setData] = useState<AnonymousData>({
+    transactions: [],
+    summary: {
+      totalDebit: 0,
+      totalCredit: 0,
+      netCashflow: 0,
+      startDate: new Date(),
+      endDate: new Date(),
+      startingBalance: 0,
+      endingBalance: 0,
+      transactionCount: 0,
+      creditCount: 0,
+      debitCount: 0
+    },
+    timestamp: Date.now()
+  });
 
   useEffect(() => {
     const storedData = localStorage.getItem("anonymousStatement");
@@ -41,7 +56,7 @@ export const AnonymousStatementView: React.FC = () => {
     }
   }, []);
 
-  if (!data) {
+  if (data.transactions.length === 0 && !localStorage.getItem("anonymousStatement")) {
     return (
       <Card className="w-full max-w-4xl mx-auto my-4">
         <CardContent className="pt-6">
@@ -75,6 +90,7 @@ export const AnonymousStatementView: React.FC = () => {
             transactions={data.transactions}
             isLoading={false}
             showLoadMore={false}
+            isAnonymous={true}
           />
         </CardContent>
       </Card>

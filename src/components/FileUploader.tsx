@@ -77,7 +77,7 @@ const FileUploader: React.FC = () => {
       }, 500);
 
       if (isAnonymous) {
-        // Parse statement and store in localStorage for anonymous mode
+        // Parse and store in localStorage for anonymous mode
         const result = await parseHdfcStatement(selectedFile);
         localStorage.setItem('anonymousStatement', JSON.stringify({
           ...result,
@@ -88,7 +88,7 @@ const FileUploader: React.FC = () => {
         setUploadSuccess(true);
         navigate('/anonymous-analysis');
       } else {
-        // Upload to server for authenticated users
+        // Let TransactionContext handle parsing and uploading
         await uploadAndParseStatement(selectedFile);
         clearInterval(progressInterval);
         setUploadProgress(100);
