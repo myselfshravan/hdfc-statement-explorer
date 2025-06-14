@@ -5,9 +5,10 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 ## 🌟 Key Features
 
 ![File Upload Interface](screenshots/file_upload.png)
-![Anonymous Mode](screenshots/anonymous_mode.png)
-![Anonymous Warning](screenshots/anonymous_warn.png)
-![Ananymous Transactions](screenshots/anonymous_transactions.png)
+
+| ![Anonymous Mode](screenshots/anonymous_mode.png) | ![Anonymous Warning](screenshots/anonymous_warn.png) |
+|:--:|:--:|
+
 ![Transaction Analysis](screenshots/transactions.png)
 ![Transaction Analysis](screenshots/transaction_analysis.png)
 ![Statement Analysis](screenshots/statement_analysis.png)
@@ -41,12 +42,12 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 1. Sign up for an account
 2. Upload your first HDFC bank statement
    ![File Upload Interface](screenshots/file_upload.png)
-3. Explore transactions with automatic categorization
-   ![Transaction Analysis](screenshots/transactions.png)
-4. Create and manage tags
-   ![Tag Management](screenshots/tag_manage.png)
-5. Analyze your spending patterns
+3. Analyze your spending patterns
    ![Statement Analysis](screenshots/statement_analysis.png)
+4. Explore transactions with automatic categorization
+   ![Transaction Analysis](screenshots/transactions.png)
+5. Create and manage tags
+   ![Tag Management](screenshots/tag_manage.png)
 
 ## Features
 
