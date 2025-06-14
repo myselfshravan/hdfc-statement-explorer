@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SuperStatementManager } from "@/utils/superStatementManager";
 import { useAuth } from "@/context/AuthContext";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { Transaction, StatementSummary } from "@/types/transaction";
 import { Tag } from "@/types/tags";
 import { TransactionTags } from "@/components/TransactionTags";
@@ -45,6 +46,7 @@ export default function Analysis() {
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   // Initialize date range from URL params
   const initDateRange = (): CalendarDateRange | undefined => {
     const fromStr = searchParams.get("from");
@@ -384,9 +386,29 @@ export default function Analysis() {
           </div>
 
           {/* Transactions Table */}
-          <Card>
+          <Card className={`${isTableFullScreen ? 'fixed inset-0 z-50 m-0 rounded-none' : ''}`}>
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Transactions</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold">Transactions</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:flex items-center gap-2"
+                  onClick={() => setIsTableFullScreen(!isTableFullScreen)}
+                >
+                  {isTableFullScreen ? (
+                    <>
+                      <Minimize2 className="h-4 w-4" />
+                      Exit Full Screen
+                    </>
+                  ) : (
+                    <>
+                      <Maximize2 className="h-4 w-4" />
+                      Full Screen
+                    </>
+                  )}
+                </Button>
+              </div>
               <span className="text-sm text-muted-foreground">
                 Showing {filteredTransactions.length} of {transactions.length}{" "}
                 transactions
@@ -397,7 +419,12 @@ export default function Analysis() {
               <div className="hidden md:block rounded-md border">
                 <div
                   className="overflow-auto"
-                  style={{ maxHeight: "calc(100vh - 400px)" }}
+                  style={{ 
+                    maxHeight: isTableFullScreen 
+                      ? "calc(100vh - 73px)" // Header height
+                      : "calc(100vh - 400px)",
+                    transition: "max-height 0.3s ease-in-out"
+                  }}
                 >
                   <Table>
                     <TableHeader className="sticky top-0 bg-background z-10 border-b">

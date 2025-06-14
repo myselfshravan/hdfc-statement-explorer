@@ -4,7 +4,10 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 
 ## 🌟 Key Features
 
-![Transaction Analysis](screenshots/analysis.png)
+![File Upload Interface](screenshots/file_upload.png)
+![Transaction Analysis](screenshots/transaction_analysis.png)
+![Statement Analysis](screenshots/statement_analysis.png)
+![Tag Management](screenshots/tag_manage.png)
 
 - 📊 Smart statement merging and reconciliation
 - 🔄 Continuous transaction history
@@ -24,38 +27,29 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ or Bun runtime
 - PostgreSQL database (with Supabase)
 - Excel files (.xls/.xlsx) from HDFC Bank
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/hdfc-account-explorer.git
-
-# Install dependencies
-npm install   # or bun install
-
-# Configure environment variables
-cp .env.example .env
-# Update .env with your Supabase credentials
-
-# Start the development server
-npm run dev   # or bun dev
-```
-
 ### First Steps
+
 1. Sign up for an account
 2. Upload your first HDFC bank statement
+   ![File Upload Interface](screenshots/file_upload.png)
 3. Explore transactions with automatic categorization
+   ![Transaction Analysis](screenshots/transactions.png)
 4. Create and manage tags
+   ![Tag Management](screenshots/tag_manage.png)
 5. Analyze your spending patterns
+   ![Statement Analysis](screenshots/statement_analysis.png)
 
 ## Features
 
 ### 1. Intelligent Statement Merging & Aggregation
 
 The application uses a sophisticated merging algorithm that:
+
 - Identifies overlapping date ranges using a B-tree data structure
 - Deduplicates transactions based on unique reference numbers (chqRefNumber)
 - Maintains running balances with automatic validation
@@ -64,16 +58,19 @@ The application uses a sophisticated merging algorithm that:
 ### 2. Advanced Data Structures & Algorithms
 
 #### B-tree for Date Range Management
+
 - Uses a B-tree to efficiently store and query date ranges
 - O(log n) complexity for finding overlapping statements
 - Optimizes memory usage for large datasets
 
 #### Transaction Deduplication
+
 - Hash-based transaction identification
 - O(1) lookup time using Map data structures
 - Consistent handling of duplicate entries across multiple statements
 
 #### Batch Processing with Sliding Window
+
 - Implements sliding window algorithm for transaction tags
 - Processes large datasets in configurable batch sizes
 - Prevents memory overload while maintaining performance
@@ -103,28 +100,100 @@ The application uses a sophisticated merging algorithm that:
 
 ## Technical Architecture
 
-### Statement Processing Pipeline
+### V1 Approach (Legacy)
+
+#### Statement Processing Pipeline (V1)
 
 1. **Upload & Parse**
+
    ```
    Excel File → Parser → Transaction Objects → Validation → Storage
    ```
 
 2. **Merging Algorithm**
+
    ```
    New Statement → Find Overlaps → Deduplicate → Validate Balances → Merge
    ```
 
 3. **Tag Management**
+
    ```
    Global Tags ← → Transaction Tags ← → Batch Processing
    ```
 
-### Data Flow
+### V2 Approach (Current)
 
+Our latest approach significantly improves performance and data management:
+
+#### Super Statement Management
+```mermaid
+graph TD
+    A[New Statement] --> B[Extract Transactions]
+    B --> C[Merge with Super Statement]
+    C --> D[Validate Balances]
+    D --> E[Update Summary]
+    E --> F[Save to Database]
+
+    subgraph "Super Statement Table"
+        G[JSON Transactions]
+        H[Date Range]
+        I[Summary Stats]
+    end
+
+    F --> G
+    F --> H
+    F --> I
+```
+
+Key Improvements:
+- Single table storage instead of multiple statement records
+- Built-in deduplication using chqRefNumber
+- Automatic balance validation and correction
+- Efficient JSON-based transaction storage
+- Maintains running balances across merged statements
+
+#### Tag Management System
+```mermaid
+graph TD
+    A[Transaction List] --> B[Bulk Tag Fetch]
+    B --> C[Map Construction]
+    C --> D[O(1) Tag Lookups]
+    
+    E[Tag Updates] --> F[Optimistic UI Update]
+    F --> G[Background Sync]
+    
+    subgraph "Memory Cache"
+        C
+        D
+    end
+    
+    subgraph "Database"
+        H[Tags Table]
+        I[Transaction Tags]
+    end
+    
+    G --> H
+    G --> I
+```
+
+Key Features:
+- Efficient bulk tag fetching with getAllTransactionTags
+- O(1) tag lookups using Map data structure
+- Batch operations for tag updates
+- Optimistic UI updates for better UX
+- Real-time tag synchronization
+
+### V1 Data Flow (Legacy)
 ```
 User Upload → Parser → Super Statement Manager → Transaction Context → UI
                    └→ Statement Storage     ↖→ Tag Manager
+```
+
+### V2 Data Flow (Current)
+```
+User Upload → Parser → Super Statement Manager[JSON] → Transaction Context[Map] → UI
+                   └→ Tag Manager[Batch Ops] ↗        └→ Optimistic Updates
 ```
 
 ## Revolutionary Aspects
@@ -193,6 +262,7 @@ User Upload → Parser → Super Statement Manager → Transaction Context → U
 ## DSA Concepts in Action
 
 ### Example 1: Statement Merging with B-tree
+
 ```typescript
 class DateRangeNode {
   startDate: Date;
@@ -227,6 +297,7 @@ class DateRangeNode {
 ```
 
 ### Example 2: Batch Processing with Sliding Window
+
 ```typescript
 async function processTags(transactions: Transaction[]) {
   const BATCH_SIZE = 100;
