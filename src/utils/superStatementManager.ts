@@ -12,24 +12,6 @@ interface SuperStatement {
 }
 
 export class SuperStatementManager {
-  private async generateTransactionId(
-    transaction: Omit<Transaction, "transactionId">
-  ): Promise<string> {
-    const details = `${transaction.date.toISOString()}_${
-      transaction.narration
-    }_${transaction.amount}_${transaction.type}`;
-
-    // Convert the string to an ArrayBuffer for the Web Crypto API
-    const encoder = new TextEncoder();
-    const data = encoder.encode(details);
-
-    // Generate the SHA-256 hash
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-
-    // Convert the hash buffer to a hex string
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
 
   private async getSuperStatement(
     userId: string
@@ -102,7 +84,7 @@ export class SuperStatementManager {
 
       if (Math.abs(expectedBalance - transaction.closingBalance) > 0.01) {
         console.warn(
-          `Balance mismatch for transaction ${transaction.transactionId}`
+          `Balance mismatch for transaction ${transaction.chqRefNumber}`
         );
         transaction.closingBalance = expectedBalance;
       }
@@ -119,13 +101,8 @@ export class SuperStatementManager {
     // Get existing super statement or create new one
     let superStatement = await this.getSuperStatement(userId);
 
-    // Generate IDs for new transactions
-    const processedTransactions = await Promise.all(
-      newTransactions.map(async (t) => ({
-        ...t,
-        transactionId: await this.generateTransactionId(t), // Await the promise here
-      }))
-    );
+    // Process the transactions without generating extra IDs
+    const processedTransactions = newTransactions;
 
     if (!superStatement) {
       // Create new super statement
@@ -141,11 +118,11 @@ export class SuperStatementManager {
       // Merge new transactions with existing ones
       const mergedTransactions = [...superStatement.transactions];
 
-      // Add only non-duplicate transactions
+      // Add only non-duplicate transactions using chqRefNumber
       for (const newTx of processedTransactions) {
         if (
           !mergedTransactions.some(
-            (t) => t.transactionId === newTx.transactionId
+            (t) => t.chqRefNumber === newTx.chqRefNumber
           )
         ) {
           mergedTransactions.push(newTx);

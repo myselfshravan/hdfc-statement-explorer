@@ -199,14 +199,12 @@ export default function Analysis() {
     setFilteredTransactions(filtered);
   }, [dateRange, transactions, selectedTagIds, transactionTags]);
 
-  const handleTagsChange = async (changedTransactionId: string) => {
+  const handleTagsChange = async (chqRefNumber: string) => {
     try {
-      const updatedTags = await tagManager.getTransactionTags(
-        changedTransactionId
-      );
+      const updatedTags = await tagManager.getTransactionTags(chqRefNumber);
       setTransactionTags((prevMap) => {
         const newMap = new Map(prevMap);
-        newMap.set(changedTransactionId, updatedTags);
+        newMap.set(chqRefNumber, updatedTags);
         return newMap;
       });
     } catch (error) {

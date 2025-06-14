@@ -1,3 +1,0 @@
--- This migration is empty as its contents have been merged into
--- 20250613_update_transaction_tags_schema.sql to ensure proper
--- sequencing of policy and schema changes

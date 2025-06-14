@@ -141,7 +141,7 @@ export const parseHdfcStatement = async (
         category: type === "credit" ? "Deposit" : "Withdrawal",
         upiId,
         merchant,
-        statementId: "", // This will be set when statement is created
+        statementId: Math.random().toString(36).substring(2, 15),
       };
     }
   );
