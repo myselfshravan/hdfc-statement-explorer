@@ -5,6 +5,10 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 ## 🌟 Key Features
 
 ![File Upload Interface](screenshots/file_upload.png)
+![Anonymous Mode](screenshots/anonymous_mode.png)
+![Anonymous Warning](screenshots/anonymous_warn.png)
+![Ananymous Transactions](screenshots/anonymous_transactions.png)
+![Transaction Analysis](screenshots/transactions.png)
 ![Transaction Analysis](screenshots/transaction_analysis.png)
 ![Statement Analysis](screenshots/statement_analysis.png)
 ![Tag Management](screenshots/tag_manage.png)
