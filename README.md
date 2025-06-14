@@ -161,7 +161,7 @@ Key Improvements:
 graph TD
     A[Transaction List] --> B[Bulk Tag Fetch]
     B --> C[Map Construction]
-    C --> D[O(1) Tag Lookups]
+    C --> D[Constant Time Tag Lookups]  %% Rephrased to avoid special characters
     
     E[Tag Updates] --> F[Optimistic UI Update]
     F --> G[Background Sync]
