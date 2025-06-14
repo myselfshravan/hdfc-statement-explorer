@@ -218,16 +218,46 @@ export class TagManager {
     }
   }
 
-  // Get all transactions with their tags
+  // Get all transaction tags in one query
+  async getAllTransactionTags(): Promise<Map<string, Tag[]>> {
+    const { data, error } = await supabase
+      .from('transaction_tags')
+      .select('chq_ref_number, tags(*)')
+      .order('chq_ref_number');
+
+    if (error) {
+      throw new TagOperationError(
+        `Failed to fetch all transaction tags: ${error.message}`,
+        error.code,
+        error.details
+      );
+    }
+
+    const tagsMap = new Map<string, Tag[]>();
+    
+    // Group tags by chq_ref_number
+    data.forEach(item => {
+      const tags = tagsMap.get(item.chq_ref_number) || [];
+      if (item.tags) {
+        tags.push(item.tags);
+      }
+      tagsMap.set(item.chq_ref_number, tags);
+    });
+
+    return tagsMap;
+  }
+
+  // Get specific transactions with their tags
   async getTransactionsWithTags(chqRefNumbers: string[]): Promise<Map<string, Tag[]>> {
     const { data, error } = await supabase
       .from('transaction_tags')
       .select('chq_ref_number, tags(*)')
-      .in('chq_ref_number', chqRefNumbers);
+      .in('chq_ref_number', chqRefNumbers)
+      .order('chq_ref_number');
 
     if (error) {
       throw new TagOperationError(
-        `Failed to remove tags from transaction: ${error.message}`,
+        `Failed to fetch transaction tags: ${error.message}`,
         error.code,
         error.details
       );
@@ -240,9 +270,11 @@ export class TagManager {
     
     // Fill in tags where they exist
     data.forEach(item => {
-      const existingTags = tagsMap.get(item.chq_ref_number) || [];
-      existingTags.push(item.tags);
-      tagsMap.set(item.chq_ref_number, existingTags);
+      if (item.tags) {
+        const existingTags = tagsMap.get(item.chq_ref_number) || [];
+        existingTags.push(item.tags);
+        tagsMap.set(item.chq_ref_number, existingTags);
+      }
     });
 
     return tagsMap;

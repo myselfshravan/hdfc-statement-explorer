@@ -42,9 +42,9 @@ export default function Analysis() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<StatementSummary | null>(null);
-  const [filteredTransactions, setFilteredTransactions] = useState<
-    Transaction[]
-  >([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   // Initialize date range from URL params
   const initDateRange = (): CalendarDateRange | undefined => {
     const fromStr = searchParams.get("from");
@@ -92,58 +92,32 @@ export default function Analysis() {
     loadSuperStatement();
   }, [user]);
 
-  useEffect(() => {
-    const BATCH_SIZE = 100;
+  const loadTransactionTags = React.useCallback(async () => {
+    if (transactions.length === 0) return;
 
-    const loadTransactionTags = async () => {
-      if (transactions.length === 0) return;
+    setLoadingProgress({ loaded: 0, total: transactions.length });
+    setLoadingError(null);
 
-      const allRefNumbers = transactions.map((t) => t.chqRefNumber);
-      const currentTagsMap = new Map(transactionTags);
-      const combinedTagsMap = new Map<string, Tag[]>();
+    try {
+      // Get all tags in one query
+      const tagsMap = await tagManager.getAllTransactionTags();
+      
+      // Update state with complete map
+      setTransactionTags(tagsMap);
 
-      for (let i = 0; i < allRefNumbers.length; i += BATCH_SIZE) {
-        const batchRefs = allRefNumbers.slice(i, i + BATCH_SIZE);
-        if (batchRefs.length > 0) {
-          try {
-            const needsFetch = batchRefs.some(
-              (ref) => !currentTagsMap.has(ref)
-            );
-            if (!needsFetch) {
-              batchRefs.forEach((ref) => {
-                if (currentTagsMap.has(ref)) {
-                  combinedTagsMap.set(ref, currentTagsMap.get(ref)!);
-                }
-              });
-              continue;
-            }
+      // Update progress
+      setLoadingProgress({ loaded: transactions.length, total: transactions.length });
 
-            const batchTagsMap = await tagManager.getTransactionsWithTags(
-              batchRefs
-            );
-            batchTagsMap.forEach((tags, refNum) => {
-              combinedTagsMap.set(refNum, tags);
-            });
-
-            if (i + BATCH_SIZE < allRefNumbers.length) {
-              await new Promise((resolve) => setTimeout(resolve, 200));
-            }
-          } catch (error) {
-            console.error(`Error fetching tags for batch:`, error);
-          }
-        }
-      }
-
-      if (
-        JSON.stringify(Array.from(combinedTagsMap.entries())) !==
-        JSON.stringify(Array.from(transactionTags.entries()))
-      ) {
-        setTransactionTags(combinedTagsMap);
-      }
-    };
-
-    loadTransactionTags();
+    } catch (error) {
+      setLoadingError('Failed to load transaction tags');
+      console.error('Tag loading error:', error);
+    }
   }, [transactions]);
+
+  // Load tags when transactions change
+  useEffect(() => {
+    loadTransactionTags();
+  }, [loadTransactionTags]);
 
   useEffect(() => {
     let filtered = [...transactions];
@@ -188,16 +162,35 @@ export default function Analysis() {
       );
     }
 
+    // Apply tag filtering
     if (selectedTagIds.length > 0) {
-      filtered = filtered.filter((tx) => {
-        const txTagObjects = transactionTags?.get(tx.chqRefNumber) || [];
-        const txTagIds = txTagObjects.map((t) => t.id);
-        return selectedTagIds.some((tagId) => txTagIds.includes(tagId));
+      const selectedTagsSet = new Set(selectedTagIds);
+      filtered = filtered.filter(tx => {
+        const txTags = transactionTags.get(tx.chqRefNumber) || [];
+        // Check if any of the transaction's tags are in the selected set
+        return txTags.some(tag => selectedTagsSet.has(tag.id));
       });
     }
 
     setFilteredTransactions(filtered);
-  }, [dateRange, transactions, selectedTagIds, transactionTags]);
+  }, [dateRange, transactions, selectedTagIds, transactionTags, searchParams]);
+
+  // Memoize summary stats calculation to avoid recalculation on every render
+  const summaryStats = React.useMemo(() => ({
+    totalTransactions: filteredTransactions.length,
+    totalDebit: filteredTransactions.reduce(
+      (sum, tx) => sum + tx.debitAmount,
+      0
+    ),
+    totalCredit: filteredTransactions.reduce(
+      (sum, tx) => sum + tx.creditAmount,
+      0
+    ),
+    netCashflow: filteredTransactions.reduce(
+      (sum, tx) => sum + (tx.creditAmount - tx.debitAmount),
+      0
+    ),
+  }), [filteredTransactions]);
 
   const handleTagsChange = async (chqRefNumber: string) => {
     try {
@@ -216,21 +209,6 @@ export default function Analysis() {
     return <div>Loading...</div>;
   }
 
-  const summaryStats = {
-    totalTransactions: filteredTransactions.length,
-    totalDebit: filteredTransactions.reduce(
-      (sum, tx) => sum + tx.debitAmount,
-      0
-    ),
-    totalCredit: filteredTransactions.reduce(
-      (sum, tx) => sum + tx.creditAmount,
-      0
-    ),
-    netCashflow: filteredTransactions.reduce(
-      (sum, tx) => sum + (tx.creditAmount - tx.debitAmount),
-      0
-    ),
-  };
 
   function getPayeeName(narration: string) {
     return narration?.split("-")[1] || "UPI Transaction";
@@ -277,6 +255,37 @@ export default function Analysis() {
             </Button>
           </div>
         </div>
+
+        {/* Loading Progress */}
+        {loadingProgress.total > 0 && loadingProgress.loaded < loadingProgress.total && (
+          <div className="mb-4 bg-blue-50 rounded-lg px-4 py-3 shadow">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm text-blue-700 font-medium">
+                Loading transaction tags...
+              </span>
+              <span className="text-xs text-blue-600">
+                {Math.round((loadingProgress.loaded / loadingProgress.total) * 100)}%
+              </span>
+            </div>
+            <div className="w-full bg-blue-100 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: `${(loadingProgress.loaded / loadingProgress.total) * 100}%`
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {loadingError && (
+          <div className="mb-4 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+            <div className="text-sm text-red-600">
+              {loadingError}
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
