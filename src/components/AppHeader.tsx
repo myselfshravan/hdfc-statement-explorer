@@ -153,6 +153,13 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             variant="outline"
             className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
           >
+            <Link to="/transactions">All Transactions</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+          >
             <Link to="/tags">Manage Tags</Link>
           </Button>
         </>

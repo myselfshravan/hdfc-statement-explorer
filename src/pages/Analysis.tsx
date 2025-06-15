@@ -43,8 +43,13 @@ export default function Analysis() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<StatementSummary | null>(null);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    Transaction[]
+  >([]);
+  const [loadingProgress, setLoadingProgress] = useState({
+    loaded: 0,
+    total: 0,
+  });
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [isTableFullScreen, setIsTableFullScreen] = useState(false);
   // Initialize date range from URL params
@@ -103,16 +108,18 @@ export default function Analysis() {
     try {
       // Get all tags in one query
       const tagsMap = await tagManager.getAllTransactionTags();
-      
+
       // Update state with complete map
       setTransactionTags(tagsMap);
 
       // Update progress
-      setLoadingProgress({ loaded: transactions.length, total: transactions.length });
-
+      setLoadingProgress({
+        loaded: transactions.length,
+        total: transactions.length,
+      });
     } catch (error) {
-      setLoadingError('Failed to load transaction tags');
-      console.error('Tag loading error:', error);
+      setLoadingError("Failed to load transaction tags");
+      console.error("Tag loading error:", error);
     }
   }, [transactions]);
 
@@ -167,10 +174,10 @@ export default function Analysis() {
     // Apply tag filtering
     if (selectedTagIds.length > 0) {
       const selectedTagsSet = new Set(selectedTagIds);
-      filtered = filtered.filter(tx => {
+      filtered = filtered.filter((tx) => {
         const txTags = transactionTags.get(tx.chqRefNumber) || [];
         // Check if any of the transaction's tags are in the selected set
-        return txTags.some(tag => selectedTagsSet.has(tag.id));
+        return txTags.some((tag) => selectedTagsSet.has(tag.id));
       });
     }
 
@@ -178,21 +185,24 @@ export default function Analysis() {
   }, [dateRange, transactions, selectedTagIds, transactionTags, searchParams]);
 
   // Memoize summary stats calculation to avoid recalculation on every render
-  const summaryStats = React.useMemo(() => ({
-    totalTransactions: filteredTransactions.length,
-    totalDebit: filteredTransactions.reduce(
-      (sum, tx) => sum + tx.debitAmount,
-      0
-    ),
-    totalCredit: filteredTransactions.reduce(
-      (sum, tx) => sum + tx.creditAmount,
-      0
-    ),
-    netCashflow: filteredTransactions.reduce(
-      (sum, tx) => sum + (tx.creditAmount - tx.debitAmount),
-      0
-    ),
-  }), [filteredTransactions]);
+  const summaryStats = React.useMemo(
+    () => ({
+      totalTransactions: filteredTransactions.length,
+      totalDebit: filteredTransactions.reduce(
+        (sum, tx) => sum + tx.debitAmount,
+        0
+      ),
+      totalCredit: filteredTransactions.reduce(
+        (sum, tx) => sum + tx.creditAmount,
+        0
+      ),
+      netCashflow: filteredTransactions.reduce(
+        (sum, tx) => sum + (tx.creditAmount - tx.debitAmount),
+        0
+      ),
+    }),
+    [filteredTransactions]
+  );
 
   const handleTagsChange = async (chqRefNumber: string) => {
     try {
@@ -210,7 +220,6 @@ export default function Analysis() {
   if (loading) {
     return <div>Loading...</div>;
   }
-
 
   function getPayeeName(narration: string) {
     return narration?.split("-")[1] || "UPI Transaction";
@@ -232,7 +241,7 @@ export default function Analysis() {
   }
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="mx-auto py-6 max-w-7xl p-2">
       <div className="flex flex-col gap-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -259,33 +268,37 @@ export default function Analysis() {
         </div>
 
         {/* Loading Progress */}
-        {loadingProgress.total > 0 && loadingProgress.loaded < loadingProgress.total && (
-          <div className="mb-4 bg-blue-50 rounded-lg px-4 py-3 shadow">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-blue-700 font-medium">
-                Loading transaction tags...
-              </span>
-              <span className="text-xs text-blue-600">
-                {Math.round((loadingProgress.loaded / loadingProgress.total) * 100)}%
-              </span>
+        {loadingProgress.total > 0 &&
+          loadingProgress.loaded < loadingProgress.total && (
+            <div className="mb-4 bg-blue-50 rounded-lg px-4 py-3 shadow">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-blue-700 font-medium">
+                  Loading transaction tags...
+                </span>
+                <span className="text-xs text-blue-600">
+                  {Math.round(
+                    (loadingProgress.loaded / loadingProgress.total) * 100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-blue-100 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${
+                      (loadingProgress.loaded / loadingProgress.total) * 100
+                    }%`,
+                  }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-blue-100 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: `${(loadingProgress.loaded / loadingProgress.total) * 100}%`
-                }}
-              />
-            </div>
-          </div>
-        )}
+          )}
 
         {/* Error Message */}
         {loadingError && (
           <div className="mb-4 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
-            <div className="text-sm text-red-600">
-              {loadingError}
-            </div>
+            <div className="text-sm text-red-600">{loadingError}</div>
           </div>
         )}
 
@@ -386,7 +399,11 @@ export default function Analysis() {
           </div>
 
           {/* Transactions Table */}
-          <Card className={`${isTableFullScreen ? 'fixed inset-0 z-50 m-0 rounded-none' : ''}`}>
+          <Card
+            className={`${
+              isTableFullScreen ? "fixed inset-0 z-50 m-0 rounded-none" : ""
+            }`}
+          >
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-4">
                 <h2 className="text-lg font-semibold">Transactions</h2>
@@ -419,11 +436,11 @@ export default function Analysis() {
               <div className="hidden md:block rounded-md border">
                 <div
                   className="overflow-auto"
-                  style={{ 
-                    maxHeight: isTableFullScreen 
+                  style={{
+                    maxHeight: isTableFullScreen
                       ? "calc(100vh - 73px)" // Header height
                       : "calc(100vh - 400px)",
-                    transition: "max-height 0.3s ease-in-out"
+                    transition: "max-height 0.3s ease-in-out",
                   }}
                 >
                   <Table>
@@ -520,7 +537,7 @@ export default function Analysis() {
               {/* Mobile view */}
               <div className="md:hidden rounded-md border">
                 <div
-                  className="space-y-4 p-4 overflow-auto"
+                  className="space-y-4 p-1 overflow-auto"
                   style={{ maxHeight: "calc(100vh - 400px)" }}
                 >
                   {filteredTransactions.map((transaction, index) => (
