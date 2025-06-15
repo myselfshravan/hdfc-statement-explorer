@@ -1,12 +1,15 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UploadCloud, LogOut, LogIn, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 const AppHeader: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
   const shimmerStyle = {
     background: "linear-gradient(90deg, #004C8F 25%, #0066CC 50%, #004C8F 75%)",
     backgroundSize: "200% 100%",
@@ -35,13 +38,18 @@ const AppHeader: React.FC = () => {
     }
   };
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
   return (
-    <header className="bg-gradient-to-b from-white via-gray-50 to-gray-100/95 border-b border-gray-200 shadow-sm backdrop-blur-sm sticky top-0 z-50 max-w-7xl mx-auto">
-      <div className="container mx-auto py-2 px-4">
+    <header className="bg-white border-b border-gray-200/20 shadow-sm backdrop-blur-md sticky top-0 z-50">
+      <div className="container mx-auto py-2 px-4 max-w-7xl">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-between">
             <Link to="/" className="flex items-center">
-              <div className="bg-white p-1.5 rounded-xl shadow-md">
+              <div className="bg-white/60 p-1.5 rounded-xl shadow-sm backdrop-blur-sm border border-gray-200/20">
                 <img
                   src="/icon.png"
                   alt="HDFC Statement Analyser Logo"
@@ -57,12 +65,21 @@ const AppHeader: React.FC = () => {
             </Link>
             {/* Mobile Navigation */}
             <div className="sm:hidden">
-              <Sheet>
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                  <Menu size={24} />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="hover:bg-gray-100/10 active:scale-95 transition-all duration-200 rounded-full p-2"
+                  >
+                    <Menu size={24} />
+                  </Button>
                 </SheetTrigger>
-                <SheetContent>
-                  <div className="flex flex-col gap-4 mt-4">
+                <SheetContent
+                  className="w-[80%] bg-white border-gray-200/20 backdrop-blur-md"
+                  side="right"
+                >
+                  <nav className="flex flex-col gap-4 mt-4">
                     <NavigationButtons
                       hasData={hasData}
                       user={user}
@@ -70,8 +87,10 @@ const AppHeader: React.FC = () => {
                       handleUploadClick={handleUploadClick}
                       fileInputRef={fileInputRef}
                       handleFileChange={handleFileChange}
+                      onNavigate={handleNavigation}
+                      isMobile
                     />
-                  </div>
+                  </nav>
                 </SheetContent>
               </Sheet>
             </div>
@@ -86,6 +105,7 @@ const AppHeader: React.FC = () => {
               handleUploadClick={handleUploadClick}
               fileInputRef={fileInputRef}
               handleFileChange={handleFileChange}
+              onNavigate={handleNavigation}
             />
           </div>
         </div>
@@ -101,6 +121,8 @@ interface NavigationButtonsProps {
   handleUploadClick: () => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onNavigate: (path: string) => void;
+  isMobile?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -110,6 +132,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   handleUploadClick,
   fileInputRef,
   handleFileChange,
+  onNavigate,
+  isMobile = false,
 }) => {
   return (
     <>
@@ -123,7 +147,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             className="hidden"
           />
           <Button
-            className="bg-gradient-to-r from-hdfc-blue to-hdfc-darkBlue hover:from-hdfc-lightBlue hover:to-hdfc-blue text-white w-full shadow-md hover:shadow-lg transition-all duration-300 rounded-lg font-semibold"
+            className="bg-hdfc-blue text-white w-full shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
             onClick={handleUploadClick}
           >
             <UploadCloud className="h-4 w-4 mr-2" />
@@ -134,45 +158,52 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
       {user ? (
         <>
+          {isMobile && (
+            <Button
+              onClick={() => onNavigate("/")}
+              variant="outline"
+              className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
+            >
+              Home
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={signOut}
-            className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+            className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
           <Button
-            asChild
-            className="bg-hdfc-blue text-white hover:bg-hdfc-darkBlue transition-all duration-300 shadow-md hover:shadow-lg w-full rounded-lg font-semibold"
+            onClick={() => onNavigate("/analysis")}
+            className="bg-hdfc-blue text-white w-full shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
           >
-            <Link to="/analysis">Go to Analysis</Link>
+            Go to Analysis
           </Button>
           <Button
-            asChild
             variant="outline"
-            className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+            onClick={() => onNavigate("/transactions")}
+            className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
           >
-            <Link to="/transactions">All Transactions</Link>
+            All Transactions
           </Button>
           <Button
-            asChild
             variant="outline"
-            className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+            onClick={() => onNavigate("/tags")}
+            className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
           >
-            <Link to="/tags">Manage Tags</Link>
+            Manage Tags
           </Button>
         </>
       ) : (
         <Button
           variant="outline"
-          asChild
-          className="w-full border-hdfc-blue/20 hover:bg-hdfc-blue/5 transition-all duration-300 hover:shadow-md rounded-lg font-medium"
+          onClick={() => onNavigate("/auth")}
+          className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
         >
-          <Link to="/auth" className="w-full">
-            <LogIn className="h-4 w-4 mr-2" />
-            Sign In
-          </Link>
+          <LogIn className="h-4 w-4 mr-2" />
+          Sign In
         </Button>
       )}
     </>
