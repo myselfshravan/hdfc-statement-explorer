@@ -12,6 +12,7 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 ![Transaction Analysis](screenshots/transactions.png)
 ![Transaction Analysis](screenshots/transaction_analysis.png)
 ![Statement Analysis](screenshots/statement_analysis.png)
+![Visualization](screenshots/visualization.png)
 ![Tag Management](screenshots/tag_manage.png)
 
 - 📊 Smart statement merging and reconciliation
