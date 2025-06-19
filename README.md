@@ -26,7 +26,7 @@ A revolutionary approach to analyzing HDFC bank statements with intelligent tran
 - **Never lose transaction history**: Seamlessly merge multiple statements
 - **Community-driven insights**: Share and use tags across users
 - **Intelligent categorization**: Automatic pattern recognition
-- **Data integrity**: Automatic balance validation and reconciliation
+- **Data integrity**: Direct balance tracking from bank statements
 - **Privacy focused**: Local processing with secure cloud storage
 
 ## Quick Start
@@ -57,7 +57,7 @@ The application uses a sophisticated merging algorithm that:
 
 - Identifies overlapping date ranges using a B-tree data structure
 - Deduplicates transactions based on unique reference numbers (chqRefNumber)
-- Maintains running balances with automatic validation
+- Uses actual balances from bank statements
 - Supports continuous statement uploads with automatic reconciliation
 
 ### 2. Advanced Data Structures & Algorithms
@@ -137,8 +137,7 @@ My latest approach significantly improves performance and data management:
 graph TD
     A[New Statement] --> B[Extract Transactions]
     B --> C[Merge with Super Statement]
-    C --> D[Validate Balances]
-    D --> E[Update Summary]
+    C --> E[Update Summary]
     E --> F[Save to Database]
 
     subgraph "Super Statement Table"
@@ -156,7 +155,7 @@ Key Improvements:
 
 - Single table storage instead of multiple statement records
 - Built-in deduplication using chqRefNumber
-- Automatic balance validation and correction
+- Direct balance tracking from source
 - Efficient JSON-based transaction storage
 - Maintains running balances across merged statements
 
@@ -235,7 +234,7 @@ flowchart LR
 
 1. **Intelligent Aggregation**
    - First-of-its-kind continuous statement merging
-   - Automatic balance validation and reconciliation
+   - Accurate balance tracking from source statements
    - Smart deduplication across multiple statements
 
 2. **Global Tag System**

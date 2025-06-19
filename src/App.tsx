@@ -6,6 +6,7 @@ import AppHeader from "./components/AppHeader";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Analysis from "./pages/Analysis";
+import Visualization from "./pages/Visualization";
 import Transactions from "./pages/Transactions";
 import { TagsPage } from "./pages/TagsPage";
 import StatementView from "./components/StatementView";
@@ -25,6 +26,7 @@ function App() {
               <Route path="/statement/:id" element={<StatementView />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/analysis" element={<Analysis />} />
+              <Route path="/visualization" element={<Visualization />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/tags" element={<TagsPage />} />
               <Route path="/anonymous-analysis" element={<AnonymousStatementView />} />

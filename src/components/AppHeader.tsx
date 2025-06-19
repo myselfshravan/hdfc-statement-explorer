@@ -3,8 +3,14 @@ import { useTransactions } from "@/context/TransactionContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { UploadCloud, LogOut, LogIn, Menu } from "lucide-react";
+import { UploadCloud, LogOut, LogIn, Menu, ChevronDown, BarChart, Tags } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const AppHeader: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -97,16 +103,79 @@ const AppHeader: React.FC = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden sm:flex flex-row items-center gap-4">
-            <NavigationButtons
-              hasData={hasData}
-              user={user}
-              signOut={signOut}
-              handleUploadClick={handleUploadClick}
-              fileInputRef={fileInputRef}
-              handleFileChange={handleFileChange}
-              onNavigate={handleNavigation}
-            />
+          <div className="hidden sm:flex flex-row items-center gap-3">
+            {user ? (
+              <>
+                {hasData && (
+                  <>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept=".xls,.xlsx"
+                      className="hidden"
+                    />
+                    <Button
+                      className="bg-hdfc-blue text-white shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
+                      onClick={handleUploadClick}
+                    >
+                      <UploadCloud className="h-4 w-4 mr-2" />
+                      Upload New
+                    </Button>
+                  </>
+                )}
+                
+                <Button
+                  onClick={() => navigate("/analysis")}
+                  className="bg-hdfc-blue text-white shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
+                >
+                  <BarChart className="h-4 w-4 mr-2" />
+                  Analysis
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium"
+                    >
+                      More
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate("/visualization")}>
+                      Flow Visualization
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/transactions")}>
+                      All Transactions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/tags")}>
+                      <Tags className="h-4 w-4 mr-2" />
+                      Manage Tags
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button
+                  variant="outline"
+                  onClick={signOut}
+                  className="border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/auth")}
+                className="border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -137,25 +206,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 }) => {
   return (
     <>
-      {hasData && (
-        <>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".xls,.xlsx"
-            className="hidden"
-          />
-          <Button
-            className="bg-hdfc-blue text-white w-full shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
-            onClick={handleUploadClick}
-          >
-            <UploadCloud className="h-4 w-4 mr-2" />
-            Upload New
-          </Button>
-        </>
-      )}
-
       {user ? (
         <>
           {isMobile && (
@@ -167,6 +217,60 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
               Home
             </Button>
           )}
+
+          {hasData && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".xls,.xlsx"
+                className="hidden"
+              />
+              <Button
+                className="bg-hdfc-blue text-white w-full shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
+                onClick={handleUploadClick}
+              >
+                <UploadCloud className="h-4 w-4 mr-2" />
+                Upload New
+              </Button>
+            </>
+          )}
+
+          <Button
+            onClick={() => onNavigate("/analysis")}
+            className="bg-hdfc-blue text-white w-full shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
+          >
+            <BarChart className="h-4 w-4 mr-2" />
+            Analysis
+          </Button>
+
+          {/* Additional Navigation */}
+          <div className="flex flex-col gap-2 w-full">
+            <Button
+              onClick={() => onNavigate("/visualization")}
+              variant="outline"
+              className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
+            >
+              Flow Visualization
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onNavigate("/transactions")}
+              className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
+            >
+              All Transactions
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onNavigate("/tags")}
+              className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
+            >
+              <Tags className="h-4 w-4 mr-2" />
+              Manage Tags
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             onClick={signOut}
@@ -174,26 +278,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
-          </Button>
-          <Button
-            onClick={() => onNavigate("/analysis")}
-            className="bg-hdfc-blue text-white w-full shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
-          >
-            Go to Analysis
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onNavigate("/transactions")}
-            className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
-          >
-            All Transactions
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onNavigate("/tags")}
-            className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
-          >
-            Manage Tags
           </Button>
         </>
       ) : (
