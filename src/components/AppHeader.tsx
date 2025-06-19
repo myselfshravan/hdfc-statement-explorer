@@ -3,7 +3,16 @@ import { useTransactions } from "@/context/TransactionContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { UploadCloud, LogOut, LogIn, Menu, ChevronDown, BarChart, Tags } from "lucide-react";
+import {
+  UploadCloud,
+  LogOut,
+  LogIn,
+  Menu,
+  ChevronDown,
+  BarChart,
+  Tags,
+  MessageCircle,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import {
   DropdownMenu,
@@ -124,7 +133,7 @@ const AppHeader: React.FC = () => {
                     </Button>
                   </>
                 )}
-                
+
                 <Button
                   onClick={() => navigate("/analysis")}
                   className="bg-hdfc-blue text-white shadow-sm hover:shadow hover:bg-hdfc-darkBlue active:scale-[0.98] transition-all duration-200 rounded-lg font-semibold"
@@ -144,11 +153,17 @@ const AppHeader: React.FC = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate("/visualization")}>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/visualization")}
+                    >
                       Flow Visualization
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/transactions")}>
                       All Transactions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/chat")}>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Chat Assistant
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/tags")}>
                       <Tags className="h-4 w-4 mr-2" />
@@ -268,6 +283,14 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             >
               <Tags className="h-4 w-4 mr-2" />
               Manage Tags
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onNavigate("/chat")}
+              className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Chat Assistant
             </Button>
           </div>
 
