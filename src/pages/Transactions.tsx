@@ -134,7 +134,7 @@ export default function Transactions() {
         </div>
 
         {/* Transactions Table Card */}
-        <Card className="relative overflow-hidden backdrop-blur-2xl bg-white/40 border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] transition-all duration-300">
+        <Card className="relative overflow-hidden backdrop-blur-2xl bg-white/40 border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 via-purple-100/20 to-blue-100/20 opacity-80" />
           <div className="relative">
             {/* Desktop view */}
@@ -167,7 +167,7 @@ export default function Transactions() {
                     {transactions.map((transaction, index) => (
                       <TableRow
                         key={transaction.chqRefNumber}
-                        className="transition-all duration-300 hover:bg-white/60 hover:backdrop-blur-xl hover:shadow-sm group"
+                        className="group"
                       >
                         <TableCell className="font-medium">
                           {formatDate(transaction.date)}
@@ -202,7 +202,7 @@ export default function Transactions() {
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           <span
-                            className={`font-medium group-hover:scale-105 transition-transform ${
+                            className={`font-medium ${
                               transaction.type === "credit"
                                 ? "text-green-600"
                                 : "text-red-600"
@@ -211,7 +211,7 @@ export default function Transactions() {
                             {formatAmount(transaction.amount)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right font-medium tabular-nums group-hover:scale-105 transition-transform">
+                        <TableCell className="text-right font-medium tabular-nums">
                           {formatAmount(transaction.closingBalance)}
                         </TableCell>
                         <TableCell className="text-center">
@@ -238,7 +238,7 @@ export default function Transactions() {
               {transactions.map((transaction) => (
                 <div
                   key={transaction.chqRefNumber}
-                  className="p-4 rounded-xl bg-white/40 backdrop-blur-2xl border border-white/40 shadow-lg hover:bg-white/60 hover:shadow-xl transition-all duration-300 active:scale-[0.99]"
+                  className="p-4 rounded-xl bg-white/40 backdrop-blur-2xl border border-white/40 shadow-lg"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-medium text-gray-900">
