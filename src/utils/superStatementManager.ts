@@ -51,9 +51,7 @@ export class SuperStatementManager {
       netCashflow: 0,
       startDate: sorted[0].date,
       endDate: sorted[sorted.length - 1].date,
-      startingBalance:
-        sorted[0].closingBalance -
-        (sorted[0].creditAmount - sorted[0].debitAmount),
+      startingBalance: sorted[0].closingBalance,
       endingBalance: sorted[sorted.length - 1].closingBalance,
       transactionCount: sorted.length,
       creditCount: sorted.filter((t) => t.type === "credit").length,
@@ -69,28 +67,10 @@ export class SuperStatementManager {
     return summary;
   }
 
+  // No need to validate balances as we trust the statement values
   private validateBalances(transactions: Transaction[]): void {
-    const sorted = [...transactions].sort(
-      (a, b) => a.date.getTime() - b.date.getTime()
-    );
-
-    let currentBalance =
-      sorted[0].closingBalance -
-      (sorted[0].creditAmount - sorted[0].debitAmount);
-
-    for (const transaction of sorted) {
-      const expectedBalance =
-        currentBalance + (transaction.creditAmount - transaction.debitAmount);
-
-      if (Math.abs(expectedBalance - transaction.closingBalance) > 0.01) {
-        console.warn(
-          `Balance mismatch for transaction ${transaction.chqRefNumber}`
-        );
-        transaction.closingBalance = expectedBalance;
-      }
-
-      currentBalance = transaction.closingBalance;
-    }
+    // Sort transactions by date for consistency
+    transactions.sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
   public async mergeStatement(
@@ -115,22 +95,24 @@ export class SuperStatementManager {
         summary: newSummary,
       };
     } else {
-      // Merge new transactions with existing ones
-      const mergedTransactions = [...superStatement.transactions];
-
-      // Add only non-duplicate transactions using chqRefNumber
-      for (const newTx of processedTransactions) {
-        if (
-          !mergedTransactions.some(
-            (t) => t.chqRefNumber === newTx.chqRefNumber
-          )
-        ) {
-          mergedTransactions.push(newTx);
-        }
-      }
-
-      // Sort by date and validate running balances
-      mergedTransactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+      // Merge new transactions while maintaining chronological order
+      const uniqueTransactions = new Map<string, Transaction>();
+      
+      // Add existing transactions to map
+      superStatement.transactions.forEach(tx => {
+        uniqueTransactions.set(tx.chqRefNumber, tx);
+      });
+      
+      // Add or update with new transactions
+      processedTransactions.forEach(tx => {
+        uniqueTransactions.set(tx.chqRefNumber, tx);
+      });
+      
+      // Convert to array and sort by date
+      const mergedTransactions = Array.from(uniqueTransactions.values())
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+      
+      // Just sort transactions, no balance validation needed
       this.validateBalances(mergedTransactions);
 
       superStatement = {

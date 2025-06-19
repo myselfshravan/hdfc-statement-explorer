@@ -146,17 +146,11 @@ export const parseHdfcStatement = async (
     }
   );
 
-  // Calculate starting balance using the first transaction's closing balance minus its impact
+  // Get the first and last transactions for balance data
   const firstTransaction = transactions[0];
   const lastTransaction = transactions[transactions.length - 1];
-  let startingBalance = 0;
 
-  if (firstTransaction) {
-    startingBalance =
-      firstTransaction.closingBalance -
-      (firstTransaction.creditAmount - firstTransaction.debitAmount);
-  }
-
+  // Calculate totals
   const totalDebit = transactions.reduce((sum, t) => sum + t.debitAmount, 0);
   const totalCredit = transactions.reduce((sum, t) => sum + t.creditAmount, 0);
 
@@ -164,9 +158,9 @@ export const parseHdfcStatement = async (
     totalDebit,
     totalCredit,
     netCashflow: totalCredit - totalDebit,
-    startDate: transactions[0]?.date || new Date(),
-    endDate: transactions[transactions.length - 1]?.date || new Date(),
-    startingBalance,
+    startDate: firstTransaction?.date || new Date(),
+    endDate: lastTransaction?.date || new Date(),
+    startingBalance: firstTransaction?.closingBalance || 0,
     endingBalance: lastTransaction?.closingBalance || 0,
     transactionCount: transactions.length,
     creditCount: transactions.filter((t) => t.type === "credit").length,
