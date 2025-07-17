@@ -20,6 +20,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Trash2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 
 interface ResponseMetrics {
   total_time: number;
@@ -228,7 +232,7 @@ export default function Chat() {
 
     try {
       const apiPayload = {
-        model: "llama-3.1-8b-instant",
+        model: "llama-3.3-70b-versatile",
         messages: [
           ...getRecentContext(messages, statementData.summary),
           { role: "user", content: userMessage.content },
@@ -366,9 +370,96 @@ export default function Chat() {
                         : "bg-muted"
                     )}
                   >
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                    {message.role === "assistant" ? (
+                      <div className="text-sm prose prose-sm max-w-none dark:prose-invert">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            // Customize code block styling
+                            pre: ({ children }) => (
+                              <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto">
+                                {children}
+                              </pre>
+                            ),
+                            code: ({ children, ...props }) => {
+                              const inline = !props.className?.includes('language-');
+                              return (
+                                <code
+                                  className={
+                                    inline
+                                      ? "bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm"
+                                      : ""
+                                  }
+                                  {...props}
+                                >
+                                  {children}
+                                </code>
+                              );
+                            },
+                            // Style tables
+                            table: ({ children }) => (
+                              <table className="border-collapse border border-gray-300 dark:border-gray-600 w-full">
+                                {children}
+                              </table>
+                            ),
+                            th: ({ children }) => (
+                              <th className="border border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-50 dark:bg-gray-700 font-medium">
+                                {children}
+                              </th>
+                            ),
+                            td: ({ children }) => (
+                              <td className="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                {children}
+                              </td>
+                            ),
+                            // Style lists
+                            ul: ({ children }) => (
+                              <ul className="list-disc pl-4 space-y-1">
+                                {children}
+                              </ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="list-decimal pl-4 space-y-1">
+                                {children}
+                              </ol>
+                            ),
+                            // Style headings
+                            h1: ({ children }) => (
+                              <h1 className="text-lg font-bold mb-2">
+                                {children}
+                              </h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2 className="text-base font-semibold mb-2">
+                                {children}
+                              </h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3 className="text-sm font-medium mb-1">
+                                {children}
+                              </h3>
+                            ),
+                            // Style paragraphs
+                            p: ({ children }) => (
+                              <p className="mb-2 last:mb-0">{children}</p>
+                            ),
+                            // Style blockquotes
+                            blockquote: ({ children }) => (
+                              <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic">
+                                {children}
+                              </blockquote>
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    )}
                     <div className="flex justify-between items-center mt-1">
                       <span className="text-xs opacity-50">
                         {message.timestamp.toLocaleTimeString()}
