@@ -253,7 +253,7 @@ const Landing: React.FC = () => {
                         target.nextElementSibling!.classList.remove("hidden");
                       }}
                     />
-                    <div className="hidden text-gray-400 text-center p-8 flex flex-col items-center justify-center h-64">
+                    <div className="hidden text-gray-400 text-center p-8 flex-col items-center justify-center h-64">
                       {feature.icon}
                       <p className="text-sm font-medium mt-2">
                         {feature.title}
@@ -351,7 +351,7 @@ const Landing: React.FC = () => {
                         target.nextElementSibling!.classList.remove("hidden");
                       }}
                     />
-                    <div className="hidden text-gray-400 text-center p-8 flex flex-col items-center justify-center h-48">
+                    <div className="hidden text-gray-400 text-center p-8 flex-col items-center justify-center h-48">
                       <TrendingUp className="h-12 w-12 mb-2 opacity-50" />
                       <p className="text-sm font-medium">{screenshot.title}</p>
                     </div>
