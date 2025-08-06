@@ -1,9 +1,8 @@
 import React from "react";
 import { TransactionProvider } from "@/context/TransactionContext";
 import Dashboard from "@/components/Dashboard";
-import FileUploader from "@/components/FileUploader";
 
-const Index = () => {
+const DashboardPage = () => {
   return (
     <TransactionProvider>
       <div className="flex flex-col min-h-screen bg-gray-50">
@@ -37,4 +36,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default DashboardPage;

@@ -63,7 +63,7 @@ const AppHeader: React.FC = () => {
       <div className="container mx-auto py-2 px-4 max-w-7xl">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-between">
-            <Link to="/" className="flex items-center">
+            <Link to="/dashboard" className="flex items-center">
               <div className="bg-white/60 p-1.5 rounded-xl shadow-sm backdrop-blur-sm border border-gray-200/20">
                 <img
                   src="/icon.png"
@@ -225,11 +225,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         <>
           {isMobile && (
             <Button
-              onClick={() => onNavigate("/")}
+              onClick={() => onNavigate("/dashboard")}
               variant="outline"
               className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
             >
-              Home
+              Dashboard
             </Button>
           )}
 
