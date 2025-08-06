@@ -214,7 +214,7 @@ const Landing: React.FC = () => {
               >
                 <div className="aspect-video bg-gray-100 flex items-center justify-center">
                   <img
-                    src={`/screenshots/${screenshot.image}`}
+                    src={`/${screenshot.image}`}
                     alt={screenshot.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
