@@ -11,6 +11,7 @@ import Visualization from "./pages/Visualization";
 import Chat from "./pages/Chat";
 import Transactions from "./pages/Transactions";
 import { TagsPage } from "./pages/TagsPage";
+import { AutoTaggingPage } from "./pages/AutoTaggingPage";
 import StatementView from "./components/StatementView";
 import NotFound from "./pages/NotFound";
 import AnonymousStatementView from "./components/AnonymousStatementView";
@@ -39,6 +40,7 @@ function App() {
                     <Route path="/chat" element={<Chat />} />
                     <Route path="/transactions" element={<Transactions />} />
                     <Route path="/tags" element={<TagsPage />} />
+                    <Route path="/auto-tagging" element={<AutoTaggingPage />} />
                     <Route path="/anonymous-analysis" element={<AnonymousStatementView />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

@@ -12,6 +12,7 @@ import {
   BarChart,
   Tags,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import {
@@ -169,6 +170,10 @@ const AppHeader: React.FC = () => {
                       <Tags className="h-4 w-4 mr-2" />
                       Manage Tags
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/auto-tagging")}>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Auto-Tagging
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -283,6 +288,14 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
             >
               <Tags className="h-4 w-4 mr-2" />
               Manage Tags
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onNavigate("/auto-tagging")}
+              className="w-full border-gray-200 hover:bg-gray-100/10 transition-all duration-200 hover:shadow-sm rounded-lg font-medium active:scale-[0.98]"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Auto-Tagging
             </Button>
             <Button
               variant="outline"

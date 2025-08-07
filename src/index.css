@@ -1,41 +1,73 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 209 100% 28%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 209 100% 28%;
-
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --ring: 215 20.2% 65.1%;
+ 
     --radius: 0.5rem;
   }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+ 
+    --ring: 217.2 32.6% 17.5%;
+  }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
@@ -45,161 +77,20 @@
   }
 }
 
-/* Shimmer Animation */
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
-  100% {
-    background-position: -200% 0;
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-}
-
-/* Custom classes */
-.upload-area {
-  @apply border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all hover:border-hdfc-blue hover:bg-blue-50/30;
-}
-
-.dashboard-card {
-  @apply bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden;
-}
-
-.stat-card {
-  @apply dashboard-card p-6 flex flex-col;
-}
-
-.element-wrapper {
-  position: fixed;
-  -webkit-perspective: 300px;
-  -moz-perspective: 300px;
-  perspective: 300px;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.element {
-  width: 50px;
-  height: 50px;
-  background: #2563eb;
-  position: absolute;
-  left: 50%;
-  margin-left: -25px;
-  top: 50%;
-  margin-top: -25px;
-}
-
-.loading {
-  font-family: "Helvetica Neue", "Helvetica", "Roboto", "Arial", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.5);
-  top: 50%;
-  margin-top: 25px;
-  position: absolute;
-  width: 100%;
-  text-align: center;
-}
-@-webkit-keyframes translateIn {
-  30% {
-    -webkit-transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg)
-      translateZ(20px) scale(0.95);
-    opacity: 0.25;
+  .scroll-smooth {
+    scroll-behavior: smooth;
   }
-
-  100% {
-    -webkit-transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg)
-      translateZ(0px) scale(0.85);
-    opacity: 0;
+  .transform-gpu {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
   }
-}
-
-@keyframes translateIn {
-  30% {
-    -webkit-transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg)
-      translateZ(20px) scale(0.95);
-    transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg) translateZ(20px)
-      scale(0.95);
-    opacity: 0.25;
-  }
-
-  100% {
-    -webkit-transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg)
-      translateZ(0px) scale(0.85);
-    transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) translateZ(0px)
-      scale(0.85);
-    opacity: 0;
-  }
-}
-
-.element {
-  opacity: 0;
-}
-
-.element:nth-of-type(1) {
-  -webkit-transform: rotateX(70deg) rotateY(0deg) rotateZ(45deg)
-    translateZ(30px);
-  transform: rotateX(70deg) rotateY(0deg) rotateZ(45deg) translateZ(30px);
-  -webkit-animation: translateIn 1.5s ease-in infinite 500ms;
-  animation: translateIn 1.5s ease-in infinite 500ms;
-}
-
-.element:nth-of-type(2) {
-  -webkit-transform: rotateX(70deg) rotateY(0deg) rotateZ(45deg)
-    translateZ(60px);
-  transform: rotateX(70deg) rotateY(0deg) rotateZ(45deg) translateZ(60px);
-  -webkit-animation: translateIn 1.5s ease-in infinite 700ms;
-  animation: translateIn 1.5s ease-in infinite 700ms;
-}
-
-.element:nth-of-type(3) {
-  -webkit-transform: rotateX(70deg) rotateY(0deg) rotateZ(45deg)
-    translateZ(90px);
-  transform: rotateX(70deg) rotateY(0deg) rotateZ(45deg) translateZ(90px);
-  -webkit-animation: translateIn 1.5s ease-in infinite 800ms;
-  animation: translateIn 1.5s ease-in infinite 800ms;
-}
-
-@-webkit-keyframes scaleIn {
-  80% {
-    -webkit-transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) scale(1.25);
-    opacity: 0.1;
-  }
-
-  100% {
-    -webkit-transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) scale(1);
-    opacity: 0;
-  }
-}
-
-@keyframes scaleIn {
-  80% {
-    -webkit-transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) scale(1.25);
-    transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) scale(1.25);
-    opacity: 0.1;
-  }
-
-  100% {
-    -webkit-transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) scale(1);
-    transform: rotateX(65deg) rotateY(0deg) rotateZ(45deg) scale(1);
-    opacity: 0;
-  }
-}
-
-.large-square {
-  width: 70px;
-  height: 70px;
-  background: #2563eb;
-  position: absolute;
-  left: 50%;
-  margin-left: -35px;
-  top: 50%;
-  margin-top: -35px;
-  -webkit-transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg) scale(0);
-  transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg) scale(0);
-  opacity: 0;
-  -webkit-animation: scaleIn 3s linear infinite 500ms;
-  animation: scaleIn 3s linear infinite 500ms;
 }
